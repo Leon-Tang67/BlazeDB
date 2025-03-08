@@ -1,11 +1,11 @@
 package ed.inf.adbs.blazedb;
 
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.BufferedWriter;
-import java.io.IOException;
+import java.io.*;
+
+import ed.inf.adbs.blazedb.operator.ScanOperator;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.statement.Statement;
+import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
 import ed.inf.adbs.blazedb.operator.Operator;
 
@@ -29,30 +29,31 @@ public class BlazeDB {
 		String inputFile = args[1];
 		String outputFile = args[2];
 
-		// Just for demonstration, replace this function call with your logic
-		parsingExample(inputFile);
-	}
-
-	/**
-	 * Example method for getting started with JSQLParser. Reads SQL statement
-	 * from a file or a string and prints the SELECT and WHERE clauses to screen.
-	 */
-
-	public static void parsingExample(String filename) {
 		try {
-			Statement statement = CCJSqlParserUtil.parse(new FileReader(filename));
-//            Statement statement = CCJSqlParserUtil.parse("SELECT Course.cid, Student.name FROM Course, Student WHERE Student.sid = 3");
+			// Initialize DatabaseCatalog
+			DatabaseCatalog.getInstance(databaseDir);
+
+			// Parse query using JSQLParser
+			Statement statement = CCJSqlParserUtil.parse(new FileReader(inputFile));
 			if (statement != null) {
-				Select select = (Select) statement;
-				System.out.println("Statement: " + select);
-				System.out.println("SELECT items: " + select.getPlainSelect().getSelectItems());
-				System.out.println("WHERE expression: " + select.getPlainSelect().getWhere());
+				PlainSelect select = (PlainSelect) statement;
+				String tableName = select.getFromItem().toString();
+
+				// Execute query using ScanOperator
+				ScanOperator scanOperator = new ScanOperator(tableName);
+				execute(scanOperator, outputFile);
+				scanOperator.close();
+			} else {
+				System.out.println("Unsupported query type.");
 			}
 		} catch (Exception e) {
-			System.err.println("Exception occurred during parsing");
 			e.printStackTrace();
 		}
+
+//		 Just for demonstration, replace this function call with your logic
+//		parsingExample("inputFile");
 	}
+
 
 	/**
 	 * Executes the provided query plan by repeatedly calling `getNextTuple()`
@@ -78,6 +79,34 @@ public class BlazeDB {
 			writer.close();
 		}
 		catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+
+	/**
+	 * Example method for getting started with JSQLParser. Reads SQL statement
+	 * from a file or a string and prints the SELECT and WHERE clauses to screen.
+	 */
+
+	public static void parsingExample(String filename) {
+		try {
+//			Statement statement = CCJSqlParserUtil.parse(new FileReader(filename));
+//            Statement statement = CCJSqlParserUtil.parse("SELECT Course.cid, Student.name FROM Course, Student WHERE Student.sid = 3");
+			Statement statement = CCJSqlParserUtil.parse("SELECT SUM(1), SUM(Student.A) FROM Student, Enrolled;");
+			if (statement != null) {
+				Select select = (Select) statement;
+				System.out.println("Statement: " + select);
+				System.out.println("SELECT items: " + select.getPlainSelect().getSelectItems());
+				System.out.println("WHERE expression: " + select.getPlainSelect().getWhere());
+				System.out.println("From item: " + select.getPlainSelect().getFromItem());
+				System.out.println("Joins: " + select.getPlainSelect().getJoins());
+				System.out.println("Group by: " + select.getPlainSelect().getGroupBy());
+				System.out.println("Order by: " + select.getPlainSelect().getOrderByElements());
+				System.out.println("Distinct: " + select.getPlainSelect().getDistinct());
+			}
+		} catch (Exception e) {
+			System.err.println("Exception occurred during parsing");
 			e.printStackTrace();
 		}
 	}
