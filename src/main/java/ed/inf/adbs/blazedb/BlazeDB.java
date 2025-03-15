@@ -3,11 +3,14 @@ package ed.inf.adbs.blazedb;
 import java.io.*;
 
 import ed.inf.adbs.blazedb.operator.ScanOperator;
+import ed.inf.adbs.blazedb.operator.SelectOperator;
+import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
 import ed.inf.adbs.blazedb.operator.Operator;
+import ed.inf.adbs.blazedb.ExpressionEvaluator;
 
 /**
  * Lightweight in-memory database system.
@@ -20,14 +23,18 @@ public class BlazeDB {
 
 	public static void main(String[] args) {
 
-		if (args.length != 3) {
-			System.err.println("Usage: BlazeDB database_dir input_file output_file");
-			return;
-		}
+//		if (args.length != 3) {
+//			System.err.println("Usage: BlazeDB database_dir input_file output_file");
+//			return;
+//		}
+//
+//		String databaseDir = args[0];
+//		String inputFile = args[1];
+//		String outputFile = args[2];
 
-		String databaseDir = args[0];
-		String inputFile = args[1];
-		String outputFile = args[2];
+		String databaseDir = "samples/db";
+		String inputFile = "samples/input/query4.sql";
+		String outputFile = "samples/output/query4.csv";
 
 		try {
 			// Initialize DatabaseCatalog
@@ -38,17 +45,25 @@ public class BlazeDB {
 			if (statement != null) {
 				PlainSelect select = (PlainSelect) statement;
 				String tableName = select.getFromItem().toString();
+				Expression expression = select.getWhere();
 
 				// Execute query using ScanOperator
 				ScanOperator scanOperator = new ScanOperator(tableName);
-				execute(scanOperator, outputFile);
-				scanOperator.close();
+				SelectOperator selectOperator = new SelectOperator(scanOperator, expression);
+				execute(selectOperator, outputFile);
 			} else {
 				System.out.println("Unsupported query type.");
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+
+//		Expression expression = CCJSqlParserUtil.parseCondExpression("Student.sid = 4");
+//		ExpressionEvaluator evaluator = new ExpressionEvaluator(tuple, schema);
+//		expression.accept(evaluator);
+//		boolean result = evaluator.getResult();
+//		System.out.println(result);
+
 
 //		 Just for demonstration, replace this function call with your logic
 //		parsingExample("inputFile");
@@ -92,12 +107,51 @@ public class BlazeDB {
 	public static void parsingExample(String filename) {
 		try {
 //			Statement statement = CCJSqlParserUtil.parse(new FileReader(filename));
-//            Statement statement = CCJSqlParserUtil.parse("SELECT Course.cid, Student.name FROM Course, Student WHERE Student.sid = 3");
-			Statement statement = CCJSqlParserUtil.parse("SELECT SUM(1), SUM(Student.A) FROM Student, Enrolled;");
+//          Statement statement = CCJSqlParserUtil.parse("SELECT Course.cid, Student.name FROM Course, Student WHERE Student.sid = 3");
+			int query_selector = 4;
+			Statement statement = null;
+			switch (query_selector) {
+				case 1:
+					statement = CCJSqlParserUtil.parse("SELECT * FROM Student;");
+					break;
+				case 2:
+					statement = CCJSqlParserUtil.parse("SELECT Student.A FROM Student;");
+					break;
+				case 3:
+					statement = CCJSqlParserUtil.parse("SELECT Student.D, Student.B, Student.A FROM Student;");
+					break;
+				case 4:
+					statement = CCJSqlParserUtil.parse("SELECT * FROM Student WHERE Student.A < 3;");
+					break;
+				case 5:
+					statement = CCJSqlParserUtil.parse("SELECT * FROM Student, Enrolled WHERE Student.A = Enrolled.A;");
+					break;
+				case 6:
+					statement = CCJSqlParserUtil.parse("SELECT * FROM Student, Course WHERE Student.C < Course.E;");
+					break;
+				case 7:
+					statement = CCJSqlParserUtil.parse("SELECT DISTINCT Enrolled.A FROM Enrolled;");
+					break;
+				case 8:
+					statement = CCJSqlParserUtil.parse("SELECT * FROM Student ORDER BY Student.B;");
+					break;
+				case 9:
+					statement = CCJSqlParserUtil.parse("SELECT Enrolled.E, SUM(Enrolled.H * Enrolled.H) FROM Enrolled GROUP BY Enrolled.E;");
+					break;
+				case 10:
+					statement = CCJSqlParserUtil.parse("SELECT SUM(1) FROM Student GROUP BY Student.B;");
+					break;
+				case 11:
+					statement = CCJSqlParserUtil.parse("SELECT Student.B, Student.C FROM Student, Enrolled WHERE Student.A = Enrolled.A GROUP BY Student.B, Student.C ORDER BY Student.C, Student.B;");
+					break;
+				case 12:
+					statement = CCJSqlParserUtil.parse("SELECT SUM(1), SUM(Student.A) FROM Student, Enrolled;");
+					break;
+			}
 			if (statement != null) {
 				Select select = (Select) statement;
 				System.out.println("Statement: " + select);
-				System.out.println("SELECT items: " + select.getPlainSelect().getSelectItems());
+				System.out.println("SELECT items: " + select.getPlainSelect().getSelectItems().get(0).getExpression());
 				System.out.println("WHERE expression: " + select.getPlainSelect().getWhere());
 				System.out.println("From item: " + select.getPlainSelect().getFromItem());
 				System.out.println("Joins: " + select.getPlainSelect().getJoins());

@@ -9,22 +9,22 @@ import java.util.*;
  */
 
 public class Tuple {
-    private List<String> values;
+    private List<Integer> values;
 
-    public Tuple(List<String> values) {
+    public Tuple(List<Integer> values) {
         this.values = new ArrayList<>(values);
     }
 
-    public String getValue(int index) {
+    public Integer getValue(int index) {
         return values.get(index);
     }
 
-    public List<String> getValues() {
+    public List<Integer> getValues() {
         return Collections.unmodifiableList(values);
     }
 
     @Override
     public String toString() {
-        return String.join(",", values);
+        return String.join(", ", values.stream().map(String::valueOf).toArray(String[]::new));
     }
 }

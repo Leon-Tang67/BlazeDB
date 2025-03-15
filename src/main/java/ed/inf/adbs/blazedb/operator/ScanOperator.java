@@ -21,7 +21,7 @@ public class ScanOperator extends Operator {
         try {
             String line = reader.readLine();
             if (line == null) return null;
-            String[] values = line.split(" ,");
+            Integer[] values = Arrays.stream(line.split(",")).map(String::trim).map(Integer::parseInt).toArray(Integer[]::new);
             return new Tuple(Arrays.asList(values));
         } catch (IOException e) {
             e.printStackTrace();
@@ -41,9 +41,7 @@ public class ScanOperator extends Operator {
         }
     }
 
-    public void close() throws IOException {
-        if (reader != null) {
-            reader.close();
-        }
+    public String getTableName() {
+        return tableName;
     }
 }
