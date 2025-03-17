@@ -8,11 +8,11 @@ import java.io.IOException;
 import java.util.List;
 
 public class SelectOperator extends Operator {
-    private ScanOperator childOperator;
+    private Operator childOperator;
     private Expression condition;
     private List<String> schema;
 
-    public SelectOperator(ScanOperator childOperator, Expression condition) throws IOException {
+    public SelectOperator(Operator childOperator, Expression condition) throws IOException {
         this.childOperator = childOperator;
         this.condition = condition;
         this.schema = DatabaseCatalog.getInstance("").getTableSchema(childOperator.getTableName());
@@ -34,5 +34,14 @@ public class SelectOperator extends Operator {
     @Override
     public void reset() {
         childOperator.reset();
+    }
+
+    public Operator getChild() {
+        return childOperator;
+    }
+
+    @Override
+    public String getTableName() {
+        return "";
     }
 }

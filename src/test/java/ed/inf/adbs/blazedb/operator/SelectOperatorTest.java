@@ -13,7 +13,7 @@ import static ed.inf.adbs.blazedb.BlazeDB.execute;
 
 public class SelectOperatorTest extends TestCase {
 
-    public void testScanOperator() {
+    public void testSelectOperator() {
         String databaseDir = "samples/db";
         String inputFile = "samples/input/query4.sql";
         String outputFile = "samples/output/query4.csv";

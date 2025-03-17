@@ -32,41 +32,33 @@ public class BlazeDB {
 //		String inputFile = args[1];
 //		String outputFile = args[2];
 
-		String databaseDir = "samples/db";
-		String inputFile = "samples/input/query4.sql";
-		String outputFile = "samples/output/query4.csv";
+//		String databaseDir = "samples/db";
+//		String inputFile = "samples/input/query4.sql";
+//		String outputFile = "samples/output/query4.csv";
+//
+//		try {
+//			// Initialize DatabaseCatalog
+//			DatabaseCatalog.getInstance(databaseDir);
+//
+//			// Parse query using JSQLParser
+//			Statement statement = CCJSqlParserUtil.parse(new FileReader(inputFile));
+//			if (statement != null) {
+//				PlainSelect select = (PlainSelect) statement;
+//				String tableName = select.getFromItem().toString();
+//				Expression expression = select.getWhere();
+//
+//				// Execute query using ScanOperator
+//				ScanOperator scanOperator = new ScanOperator(tableName);
+//				SelectOperator selectOperator = new SelectOperator(scanOperator, expression);
+//				execute(selectOperator, outputFile);
+//			} else {
+//				System.out.println("Unsupported query type.");
+//			}
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
 
-		try {
-			// Initialize DatabaseCatalog
-			DatabaseCatalog.getInstance(databaseDir);
-
-			// Parse query using JSQLParser
-			Statement statement = CCJSqlParserUtil.parse(new FileReader(inputFile));
-			if (statement != null) {
-				PlainSelect select = (PlainSelect) statement;
-				String tableName = select.getFromItem().toString();
-				Expression expression = select.getWhere();
-
-				// Execute query using ScanOperator
-				ScanOperator scanOperator = new ScanOperator(tableName);
-				SelectOperator selectOperator = new SelectOperator(scanOperator, expression);
-				execute(selectOperator, outputFile);
-			} else {
-				System.out.println("Unsupported query type.");
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-//		Expression expression = CCJSqlParserUtil.parseCondExpression("Student.sid = 4");
-//		ExpressionEvaluator evaluator = new ExpressionEvaluator(tuple, schema);
-//		expression.accept(evaluator);
-//		boolean result = evaluator.getResult();
-//		System.out.println(result);
-
-
-//		 Just for demonstration, replace this function call with your logic
-//		parsingExample("inputFile");
+		parsingExample("inputFile");
 	}
 
 
@@ -108,7 +100,7 @@ public class BlazeDB {
 		try {
 //			Statement statement = CCJSqlParserUtil.parse(new FileReader(filename));
 //          Statement statement = CCJSqlParserUtil.parse("SELECT Course.cid, Student.name FROM Course, Student WHERE Student.sid = 3");
-			int query_selector = 4;
+			int query_selector = 3;
 			Statement statement = null;
 			switch (query_selector) {
 				case 1:
@@ -151,7 +143,7 @@ public class BlazeDB {
 			if (statement != null) {
 				Select select = (Select) statement;
 				System.out.println("Statement: " + select);
-				System.out.println("SELECT items: " + select.getPlainSelect().getSelectItems().get(0).getExpression());
+				System.out.println("SELECT items: " + select.getPlainSelect().getSelectItems());
 				System.out.println("WHERE expression: " + select.getPlainSelect().getWhere());
 				System.out.println("From item: " + select.getPlainSelect().getFromItem());
 				System.out.println("Joins: " + select.getPlainSelect().getJoins());

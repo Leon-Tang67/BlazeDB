@@ -20,5 +20,5 @@ public abstract class Operator {
      */
     public abstract void reset();
 
-//    public abstract String getTableName();
+    public abstract String getTableName();
 }
