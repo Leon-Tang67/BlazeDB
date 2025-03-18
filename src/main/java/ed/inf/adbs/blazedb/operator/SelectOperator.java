@@ -1,20 +1,22 @@
 package ed.inf.adbs.blazedb.operator;
 
-import ed.inf.adbs.blazedb.ExpressionEvaluator;
-import ed.inf.adbs.blazedb.Tuple;
 import ed.inf.adbs.blazedb.DatabaseCatalog;
+import ed.inf.adbs.blazedb.Tuple;
+import ed.inf.adbs.blazedb.ExpressionEvaluator;
 import net.sf.jsqlparser.expression.Expression;
+
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 public class SelectOperator extends Operator {
     private Operator childOperator;
-    private Expression condition;
-    private List<String> schema;
+    private Expression selectionCondition;
+    private List<Integer> schema;
 
-    public SelectOperator(Operator childOperator, Expression condition) throws IOException {
+    public SelectOperator(Operator childOperator, Expression selectionCondition) throws IOException {
         this.childOperator = childOperator;
-        this.condition = condition;
+        this.selectionCondition = selectionCondition;
         this.schema = DatabaseCatalog.getInstance("").getTableSchema(childOperator.getTableName());
     }
 
@@ -23,12 +25,11 @@ public class SelectOperator extends Operator {
         Tuple tuple;
         while ((tuple = childOperator.getNextTuple()) != null) {
             ExpressionEvaluator evaluator = new ExpressionEvaluator(tuple, schema);
-            condition.accept(evaluator);
-            if (evaluator.getResult()) {
+            if (evaluator.evaluate(selectionCondition)) {
                 return tuple;
             }
         }
-        return null;  // No more tuples match the condition
+        return null;
     }
 
     @Override
@@ -36,12 +37,8 @@ public class SelectOperator extends Operator {
         childOperator.reset();
     }
 
-    public Operator getChild() {
-        return childOperator;
-    }
-
     @Override
     public String getTableName() {
-        return "";
+        return childOperator.getTableName();
     }
 }

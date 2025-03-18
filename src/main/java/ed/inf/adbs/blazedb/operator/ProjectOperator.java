@@ -15,7 +15,7 @@ public class ProjectOperator extends Operator {
 
     public ProjectOperator(Operator childOperator, List<SelectItem<?>> selectedColumns) throws IOException {
         this.childOperator = childOperator;
-        List<String> schema = DatabaseCatalog.getInstance("").getTableSchema(this.getTableName());
+        List<String> schema = DatabaseCatalog.getInstance("").getTableSchema(childOperator.getTableName());
 
         // Convert column names to indexes
         columnIndexes = new ArrayList<>();
@@ -44,16 +44,6 @@ public class ProjectOperator extends Operator {
 
     @Override
     public String getTableName() {
-        // Traverse down the tree until we reach the ScanOperator
-        while (childOperator instanceof SelectOperator) {
-            childOperator = ((SelectOperator) childOperator).getChild();
-        }
-        // Now, childOperator should be a ScanOperator, which has tableName
-        if (childOperator instanceof ScanOperator) {
-            return ((ScanOperator) childOperator).getTableName();
-        }
-        throw new IllegalArgumentException("Invalid operator tree structure: No ScanOperator found.");
+        return childOperator.getTableName();
     }
-
 }
-

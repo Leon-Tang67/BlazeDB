@@ -1,38 +1,79 @@
 package ed.inf.adbs.blazedb;
 
 import ed.inf.adbs.blazedb.operator.*;
-import net.sf.jsqlparser.statement.Statement;
-import net.sf.jsqlparser.statement.select.*;
+import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
+import net.sf.jsqlparser.schema.Column;
+import net.sf.jsqlparser.statement.select.PlainSelect;
+import net.sf.jsqlparser.statement.select.SelectItem;
 
 import java.io.IOException;
+import java.util.*;
 
 public class QueryPlanner {
-    public Operator createQueryPlan(Statement statement) throws Exception {
-        if (!(statement instanceof Select)) {
-            throw new IllegalArgumentException("Only SELECT statements are supported.");
-        }
+    private PlainSelect select;
+    private Map<String, Operator> tableScans;
+    private List<Expression> joinConditions;
+    private Map<String, Expression> selectionConditions;
 
-        Select selectStatement = (Select) statement;
-        PlainSelect plainSelect = (PlainSelect) selectStatement;
-
-        // Step 1: Create ScanOperator for base table
-        String tableName = plainSelect.getFromItem().toString();
-
-        return getOperator(tableName, plainSelect);
+    public QueryPlanner(PlainSelect select) {
+        this.select = select;
+        this.tableScans = new HashMap<>();
+        this.joinConditions = new ArrayList<>();
+        this.selectionConditions = new HashMap<>();
     }
 
-    private static Operator getOperator(String tableName, PlainSelect plainSelect) throws IOException {
-        Operator operator = new ScanOperator(tableName);
+    public Operator generatePlan() throws IOException {
+        extractConditions(select.getWhere());
+        buildTableScans();
+        return buildJoinTree();
+    }
 
-        // Step 2: Wrap in SelectOperator if there's a WHERE clause
-        if (plainSelect.getWhere() != null) {
-            operator = new SelectOperator(operator, plainSelect.getWhere());
+    private void extractConditions(Expression where) {
+        if (where == null) return;
+        // Recursively separate join and selection conditions
+        ConditionExtractor.extract(where, selectionConditions, joinConditions);
+    }
+
+    private void buildTableScans() throws IOException {
+        for (String table : getFromTables()) {
+            Operator scan = new ScanOperator(table);
+            if (selectionConditions.containsKey(table)) {
+                scan = new SelectOperator(scan, selectionConditions.get(table));
+            }
+            tableScans.put(table, scan);
+        }
+    }
+
+    private Operator buildJoinTree() throws IOException {
+        Iterator<String> tables = getFromTables().iterator();
+        Operator root = tableScans.get(tables.next());
+
+        while (tables.hasNext()) {
+            String nextTable = tables.next();
+            Operator right = tableScans.get(nextTable);
+            Expression joinCondition = findJoinCondition(root.getTableName(), nextTable);
+            root = new JoinOperator(root, right, joinCondition);
         }
 
-        // Step 3: Wrap in ProjectionOperator if specific columns are selected
-        if (plainSelect.getSelectItems() != null && !(plainSelect.getSelectItems().get(0).getExpression() instanceof AllColumns)) {
-            operator = new ProjectOperator(operator, plainSelect.getSelectItems());
+        if (!select.getSelectItems().get(0).toString().equals("*")) {
+            root = new ProjectOperator(root, select.getSelectItems());
         }
-        return operator;
+        return root;
+    }
+
+    private Expression findJoinCondition(String leftTable, String rightTable) {
+        for (Expression cond : joinConditions) {
+            if (ConditionExtractor.isJoinCondition(cond, leftTable, rightTable)) {
+                return cond;
+            }
+        }
+        return null;
+    }
+
+    private List<String> getFromTables() {
+        return select.getFromItem().toString().contains(" ")
+                ? Arrays.asList(select.getFromItem().toString().split(","))
+                : Collections.singletonList(select.getFromItem().toString());
     }
 }

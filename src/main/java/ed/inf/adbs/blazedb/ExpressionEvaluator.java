@@ -1,138 +1,148 @@
 package ed.inf.adbs.blazedb;
 
+import ed.inf.adbs.blazedb.Tuple;
 import net.sf.jsqlparser.expression.*;
 import net.sf.jsqlparser.expression.operators.arithmetic.Multiplication;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.relational.*;
 import net.sf.jsqlparser.schema.Column;
-import net.sf.jsqlparser.expression.ExpressionVisitorAdapter;
+import net.sf.jsqlparser.schema.Table;
 
-import java.util.List;
+import java.util.Map;
 
 public class ExpressionEvaluator extends ExpressionVisitorAdapter {
     private Tuple tuple;
-    private List<String> schema;
+    private Map<String, Integer> schema;
     private boolean result;
+    private int value;
 
-    public ExpressionEvaluator(Tuple tuple, List<String> schema) {
+    public ExpressionEvaluator(Tuple tuple, Map<String, Integer> schema) {
         this.tuple = tuple;
         this.schema = schema;
-    }
-
-    @Override
-    public void visit(AndExpression andExpression) {
-        ExpressionEvaluator leftEvaluator = new ExpressionEvaluator(tuple, schema);
-        ExpressionEvaluator rightEvaluator = new ExpressionEvaluator(tuple, schema);
-
-        andExpression.getLeftExpression().accept(leftEvaluator);
-        andExpression.getRightExpression().accept(rightEvaluator);
-
-        result = leftEvaluator.getResult() && rightEvaluator.getResult();
-    }
-
-    @Override
-    public void visit(LongValue longValue) {
-        // Store the value for further comparisons
-        result = (longValue.getValue() != 0); // Treat nonzero values as true
-    }
-
-    @Override
-    public void visit(Column column) {
-        String columnName = column.getColumnName();
-        int index = schema.indexOf(columnName);
-        if (index != -1) {
-            result = true; // Just resolving column references
-        }
-    }
-
-    @Override
-    public void visit(EqualsTo equalsTo) {
-        Object leftValue = evaluateExpression(equalsTo.getLeftExpression());
-        Object rightValue = evaluateExpression(equalsTo.getRightExpression());
-
-        if (leftValue instanceof Number && rightValue instanceof Number) {
-            result = ((Number) leftValue).doubleValue() == ((Number) rightValue).doubleValue();
-        } else {
-            result = leftValue.toString().equals(rightValue.toString());
-        }
-    }
-
-    @Override
-    public void visit(NotEqualsTo notEqualsTo) {
-        Object leftValue = evaluateExpression(notEqualsTo.getLeftExpression());
-        Object rightValue = evaluateExpression(notEqualsTo.getRightExpression());
-
-        if (leftValue instanceof Number && rightValue instanceof Number) {
-            result = ((Number) leftValue).doubleValue() != ((Number) rightValue).doubleValue();
-        } else {
-            result = !leftValue.toString().equals(rightValue.toString());
-        }
-    }
-
-    @Override
-    public void visit(GreaterThan greaterThan) {
-        Object leftValue = evaluateExpression(greaterThan.getLeftExpression());
-        Object rightValue = evaluateExpression(greaterThan.getRightExpression());
-
-        if (leftValue instanceof Number && rightValue instanceof Number) {
-            result = ((Number) leftValue).doubleValue() > ((Number) rightValue).doubleValue();
-        }
-    }
-
-    @Override
-    public void visit(GreaterThanEquals greaterThanEquals) {
-        Object leftValue = evaluateExpression(greaterThanEquals.getLeftExpression());
-        Object rightValue = evaluateExpression(greaterThanEquals.getRightExpression());
-
-        if (leftValue instanceof Number && rightValue instanceof Number) {
-            result = ((Number) leftValue).doubleValue() >= ((Number) rightValue).doubleValue();
-        }
-    }
-
-    @Override
-    public void visit(MinorThan minorThan) {
-        Object leftValue = evaluateExpression(minorThan.getLeftExpression());
-        Object rightValue = evaluateExpression(minorThan.getRightExpression());
-
-        if (leftValue instanceof Number && rightValue instanceof Number) {
-            result = ((Number) leftValue).doubleValue() < ((Number) rightValue).doubleValue();
-        }
-    }
-
-    @Override
-    public void visit(MinorThanEquals minorThanEquals) {
-        Object leftValue = evaluateExpression(minorThanEquals.getLeftExpression());
-        Object rightValue = evaluateExpression(minorThanEquals.getRightExpression());
-
-        if (leftValue instanceof Number && rightValue instanceof Number) {
-            result = ((Number) leftValue).doubleValue() <= ((Number) rightValue).doubleValue();
-        }
-    }
-
-    @Override
-    public void visit(Multiplication multiplication) {
-        Object leftValue = evaluateExpression(multiplication.getLeftExpression());
-        Object rightValue = evaluateExpression(multiplication.getRightExpression());
-
-        if (leftValue instanceof Number && rightValue instanceof Number) {
-            result = true; // Just a placeholder, SUM aggregates will be handled separately.
-        }
-    }
-
-    private Object evaluateExpression(Expression expr) {
-        if (expr instanceof Column) {
-            String columnName = ((Column) expr).getColumnName();
-            int index = schema.indexOf(columnName);
-            if (index != -1) {
-                return tuple.getValue(index);
-            }
-        } else if (expr instanceof LongValue) {
-            return ((LongValue) expr).getValue();
-        }
-        return null;
+        this.result = false;
     }
 
     public boolean getResult() {
         return result;
     }
+
+    @Override
+    public void visit(AndExpression andExpr) {
+        ExpressionEvaluator leftEval = new ExpressionEvaluator(tuple, schema);
+        andExpr.getLeftExpression().accept(leftEval);
+
+        ExpressionEvaluator rightEval = new ExpressionEvaluator(tuple, schema);
+        andExpr.getRightExpression().accept(rightEval);
+
+        result = leftEval.getResult() && rightEval.getResult();
+    }
+
+    @Override
+    public void visit(EqualsTo equalsTo) {
+        evaluateComparison(equalsTo, "=");
+    }
+
+    @Override
+    public void visit(NotEqualsTo notEqualsTo) {
+        evaluateComparison(notEqualsTo, "!=");
+    }
+
+    @Override
+    public void visit(GreaterThan greaterThan) {
+        evaluateComparison(greaterThan, ">");
+    }
+
+    @Override
+    public void visit(GreaterThanEquals greaterThanEquals) {
+        evaluateComparison(greaterThanEquals, ">=");
+    }
+
+    @Override
+    public void visit(MinorThan minorThan) {
+        evaluateComparison(minorThan, "<");
+    }
+
+    @Override
+    public void visit(MinorThanEquals minorThanEquals) {
+        evaluateComparison(minorThanEquals, "<=");
+    }
+
+    private void evaluateComparison(BinaryExpression expr, String operator) {
+        ExpressionEvaluator leftEval = new ExpressionEvaluator(tuple, schema);
+        expr.getLeftExpression().accept(leftEval);
+
+        ExpressionEvaluator rightEval = new ExpressionEvaluator(tuple, schema);
+        expr.getRightExpression().accept(rightEval);
+
+        int leftValue = leftEval.value;
+        int rightValue = rightEval.value;
+
+        switch (operator) {
+            case "=":
+                result = leftValue == rightValue;
+                break;
+            case "!=":
+                result = leftValue != rightValue;
+                break;
+            case ">":
+                result = leftValue > rightValue;
+                break;
+            case ">=":
+                result = leftValue >= rightValue;
+                break;
+            case "<":
+                result = leftValue < rightValue;
+                break;
+            case "<=":
+                result = leftValue <= rightValue;
+                break;
+        }
+    }
+
+    @Override
+    public void visit(Column column) {
+        Table table = column.getTable();
+        String columnName = (table != null && table.getName() != null)
+                ? table.getName() + "." + column.getColumnName()
+                : column.getColumnName();
+
+        if (schema.containsKey(columnName)) {
+            value = tuple.getValue(schema.get(columnName));
+        } else {
+            throw new RuntimeException("Column " + columnName + " not found in schema.");
+        }
+    }
+
+    @Override
+    public void visit(LongValue longValue) {
+        value = (int) longValue.getValue();
+    }
+
+    @Override
+    public void visit(Multiplication multiplication) {
+        ExpressionEvaluator leftEval = new ExpressionEvaluator(tuple, schema);
+        multiplication.getLeftExpression().accept(leftEval);
+
+        ExpressionEvaluator rightEval = new ExpressionEvaluator(tuple, schema);
+        multiplication.getRightExpression().accept(rightEval);
+
+        value = leftEval.value * rightEval.value;
+    }
+
+//    @Override
+//    public void visit(Function function) {
+//        if (function.getName().equalsIgnoreCase("SUM")) {
+//            if (function.getParameters() != null && function.getParameters().getExpressions().size() == 1) {
+//                Expression param = function.getParameters().getExpressions().get(0);
+//                param.accept(this);
+//            } else {
+//                throw new RuntimeException("SUM function must have exactly one parameter.");
+//            }
+//        } else {
+//            throw new RuntimeException("Unsupported function: " + function.getName());
+//        }
+//    }
+
+//    @Override
+//    public void visit(NullValue nullValue) {}
 }

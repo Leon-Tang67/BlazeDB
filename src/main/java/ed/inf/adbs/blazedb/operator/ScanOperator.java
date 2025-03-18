@@ -2,18 +2,20 @@ package ed.inf.adbs.blazedb.operator;
 
 import ed.inf.adbs.blazedb.DatabaseCatalog;
 import ed.inf.adbs.blazedb.Tuple;
+
 import java.io.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ScanOperator extends Operator {
-    private BufferedReader reader;
     private String tableName;
-    private String filePath;
+    private BufferedReader reader;
+    private String tableFilePath;
 
     public ScanOperator(String tableName) throws IOException {
         this.tableName = tableName;
-        this.filePath = DatabaseCatalog.getInstance("").getTableFilePath(tableName);
-        reset();
+        this.tableFilePath = DatabaseCatalog.getInstance("").getTableFilePath(tableName);
+        this.reader = new BufferedReader(new FileReader(tableFilePath));
     }
 
     @Override
@@ -21,10 +23,14 @@ public class ScanOperator extends Operator {
         try {
             String line = reader.readLine();
             if (line == null) return null;
-            Integer[] values = Arrays.stream(line.split(",")).map(String::trim).map(Integer::parseInt).toArray(Integer[]::new);
-            return new Tuple(Arrays.asList(values));
+
+            String[] values = line.split(",");
+            List<Integer> tupleValues = new ArrayList<>();
+            for (String value : values) {
+                tupleValues.add(Integer.parseInt(value.trim()));
+            }
+            return new Tuple(tupleValues);
         } catch (IOException e) {
-            e.printStackTrace();
             return null;
         }
     }
@@ -32,15 +38,14 @@ public class ScanOperator extends Operator {
     @Override
     public void reset() {
         try {
-            if (reader != null) {
-                reader.close();
-            }
-            reader = new BufferedReader(new FileReader(filePath));
+            reader.close();
+            reader = new BufferedReader(new FileReader(tableFilePath));
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException("Error resetting ScanOperator for table: " + tableName, e);
         }
     }
 
+    @Override
     public String getTableName() {
         return tableName;
     }

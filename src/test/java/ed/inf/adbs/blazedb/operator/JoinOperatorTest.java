@@ -4,12 +4,12 @@ import ed.inf.adbs.blazedb.DatabaseCatalog;
 import ed.inf.adbs.blazedb.Interpreter;
 import junit.framework.TestCase;
 
-public class ProjectOperatorTest extends TestCase {
+public class JoinOperatorTest extends TestCase {
 
-    public void testProjectOperator() {
+    public void testJoinOperator() {
         String databaseDir = "samples/db";
-        String inputFile = "samples/input/query4.sql";
-        String outputFile = "samples/output/query4.csv";
+        String inputFile = "samples/input/query5.sql";
+        String outputFile = "samples/output/query5.csv";
 
         try {
             // Initialize DatabaseCatalog

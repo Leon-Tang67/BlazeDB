@@ -3,17 +3,24 @@ package ed.inf.adbs.blazedb;
 import ed.inf.adbs.blazedb.operator.Operator;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.statement.Statement;
+import net.sf.jsqlparser.statement.select.PlainSelect;
+import net.sf.jsqlparser.statement.select.Select;
+
 import java.io.*;
 
 public class Interpreter {
+
     public static void executeQuery(String queryFile, String outputFile) {
         try (BufferedReader reader = new BufferedReader(new FileReader(queryFile))) {
             String query = reader.readLine(); // Assume one query per file
             Statement statement = CCJSqlParserUtil.parse(query);
 
+            Select selectStatement = (Select) statement;
+            PlainSelect plainSelect = (PlainSelect) selectStatement;
+
             // Generate query plan
-            QueryPlanner planner = new QueryPlanner();
-            Operator rootOperator = planner.createQueryPlan(statement);
+            QueryPlanner planner = new QueryPlanner(plainSelect);
+            Operator rootOperator = planner.generatePlan();
 
             // Execute and write output
             execute(rootOperator, outputFile);

@@ -10,7 +10,7 @@ import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
 import ed.inf.adbs.blazedb.operator.Operator;
-import ed.inf.adbs.blazedb.ExpressionEvaluator;
+//import ed.inf.adbs.blazedb.ExpressionEvaluator;
 
 /**
  * Lightweight in-memory database system.
@@ -100,7 +100,7 @@ public class BlazeDB {
 		try {
 //			Statement statement = CCJSqlParserUtil.parse(new FileReader(filename));
 //          Statement statement = CCJSqlParserUtil.parse("SELECT Course.cid, Student.name FROM Course, Student WHERE Student.sid = 3");
-			int query_selector = 3;
+			int query_selector = 5;
 			Statement statement = null;
 			switch (query_selector) {
 				case 1:
@@ -141,15 +141,15 @@ public class BlazeDB {
 					break;
 			}
 			if (statement != null) {
-				Select select = (Select) statement;
+				PlainSelect select = (PlainSelect) statement;
 				System.out.println("Statement: " + select);
-				System.out.println("SELECT items: " + select.getPlainSelect().getSelectItems());
-				System.out.println("WHERE expression: " + select.getPlainSelect().getWhere());
-				System.out.println("From item: " + select.getPlainSelect().getFromItem());
-				System.out.println("Joins: " + select.getPlainSelect().getJoins());
-				System.out.println("Group by: " + select.getPlainSelect().getGroupBy());
-				System.out.println("Order by: " + select.getPlainSelect().getOrderByElements());
-				System.out.println("Distinct: " + select.getPlainSelect().getDistinct());
+				System.out.println("SELECT items: " + select.getSelectItems());
+				System.out.println("WHERE expression: " + select.getWhere());
+				System.out.println("From item: " + select.getFromItem());
+				System.out.println("Joins: " + select.getJoins());
+				System.out.println("Group by: " + select.getGroupBy());
+				System.out.println("Order by: " + select.getOrderByElements());
+				System.out.println("Distinct: " + select.getDistinct());
 			}
 		} catch (Exception e) {
 			System.err.println("Exception occurred during parsing");
