@@ -52,6 +52,7 @@ public class ConditionExtractor {
             String right = getTableName(equalsTo.getRightExpression());
             return (left != null && right != null) && ((left.equals(leftTable) && right.equals(rightTable)) || (left.equals(rightTable) && right.equals(leftTable)));
         }
+        // TODO: Handle other types of join conditions
         return false;
     }
 }

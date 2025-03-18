@@ -2,8 +2,10 @@ package ed.inf.adbs.blazedb;
 
 import ed.inf.adbs.blazedb.operator.*;
 import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
 import net.sf.jsqlparser.schema.Column;
+import net.sf.jsqlparser.statement.select.AllColumns;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.SelectItem;
 
@@ -49,6 +51,7 @@ public class QueryPlanner {
         Iterator<String> tables = getFromTables().iterator();
         Operator root = tableScans.get(tables.next());
 
+        // todo: handle multiple joins
         while (tables.hasNext()) {
             String nextTable = tables.next();
             Operator right = tableScans.get(nextTable);
@@ -56,24 +59,36 @@ public class QueryPlanner {
             root = new JoinOperator(root, right, joinCondition);
         }
 
-        if (!select.getSelectItems().get(0).toString().equals("*")) {
+//        if (!select.getSelectItems().get(0).toString().equals("*")) {
+        if (!(select.getSelectItems().get(0).getExpression() instanceof AllColumns)) {
             root = new ProjectOperator(root, select.getSelectItems());
         }
         return root;
     }
 
-    private Expression findJoinCondition(String leftTable, String rightTable) {
-        for (Expression cond : joinConditions) {
-            if (ConditionExtractor.isJoinCondition(cond, leftTable, rightTable)) {
-                return cond;
-            }
+private Expression findJoinCondition(String leftTable, String rightTable) {
+    List<Expression> conditions = new ArrayList<>();
+    for (Expression cond : joinConditions) {
+        if (ConditionExtractor.isJoinCondition(cond, leftTable, rightTable)) {
+            conditions.add(cond);
         }
+    }
+    if (conditions.isEmpty()) {
         return null;
     }
+    Expression combinedCondition = conditions.get(0);
+    for (int i = 1; i < conditions.size(); i++) {
+        combinedCondition = new AndExpression(combinedCondition, conditions.get(i));
+    }
+    return combinedCondition;
+}
 
     private List<String> getFromTables() {
-        return select.getFromItem().toString().contains(" ")
-                ? Arrays.asList(select.getFromItem().toString().split(","))
-                : Collections.singletonList(select.getFromItem().toString());
+        List<String> tables = new ArrayList<>();
+        tables.add(select.getFromItem().toString());
+        if (select.getJoins() != null) {
+            select.getJoins().forEach(join -> tables.add(join.toString()));
+        }
+        return tables;
     }
 }

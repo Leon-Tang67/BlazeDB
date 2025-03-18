@@ -3,7 +3,7 @@ package ed.inf.adbs.blazedb;
 import java.io.*;
 
 import ed.inf.adbs.blazedb.operator.ScanOperator;
-import ed.inf.adbs.blazedb.operator.SelectOperator;
+//import ed.inf.adbs.blazedb.operator.SelectOperator;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.statement.Statement;
@@ -116,7 +116,7 @@ public class BlazeDB {
 					statement = CCJSqlParserUtil.parse("SELECT * FROM Student WHERE Student.A < 3;");
 					break;
 				case 5:
-					statement = CCJSqlParserUtil.parse("SELECT * FROM Student, Enrolled WHERE Student.A = Enrolled.A;");
+					statement = CCJSqlParserUtil.parse("SELECT * FROM Student, Enrolled, Course WHERE Student.A = Enrolled.A AND Enrolled.E = Course.E;");
 					break;
 				case 6:
 					statement = CCJSqlParserUtil.parse("SELECT * FROM Student, Course WHERE Student.C < Course.E;");
@@ -144,9 +144,9 @@ public class BlazeDB {
 				PlainSelect select = (PlainSelect) statement;
 				System.out.println("Statement: " + select);
 				System.out.println("SELECT items: " + select.getSelectItems());
-				System.out.println("WHERE expression: " + select.getWhere());
-				System.out.println("From item: " + select.getFromItem());
-				System.out.println("Joins: " + select.getJoins());
+				System.out.println("WHERE expression: " + select.getWhere().getClass().getName());
+				System.out.println("From item: " + select.getFromItem().getClass().getName());
+				System.out.println("Joins: " + select.getJoins().get(0).getClass().getName());
 				System.out.println("Group by: " + select.getGroupBy());
 				System.out.println("Order by: " + select.getOrderByElements());
 				System.out.println("Distinct: " + select.getDistinct());

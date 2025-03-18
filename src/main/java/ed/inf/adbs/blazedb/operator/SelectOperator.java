@@ -6,18 +6,21 @@ import ed.inf.adbs.blazedb.ExpressionEvaluator;
 import net.sf.jsqlparser.expression.Expression;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class SelectOperator extends Operator {
     private Operator childOperator;
     private Expression selectionCondition;
-    private List<Integer> schema;
+    private Map<String, List<String>> schema;
 
     public SelectOperator(Operator childOperator, Expression selectionCondition) throws IOException {
         this.childOperator = childOperator;
         this.selectionCondition = selectionCondition;
-        this.schema = DatabaseCatalog.getInstance("").getTableSchema(childOperator.getTableName());
+        List<String> schema = DatabaseCatalog.getInstance("").getTableSchema(childOperator.getTableName());
+        this.schema = new HashMap<>();
+        this.schema.put(childOperator.getTableName(), schema);
     }
 
     @Override
@@ -25,7 +28,8 @@ public class SelectOperator extends Operator {
         Tuple tuple;
         while ((tuple = childOperator.getNextTuple()) != null) {
             ExpressionEvaluator evaluator = new ExpressionEvaluator(tuple, schema);
-            if (evaluator.evaluate(selectionCondition)) {
+            selectionCondition.accept(evaluator);
+            if (evaluator.getResult()) {
                 return tuple;
             }
         }
@@ -35,6 +39,10 @@ public class SelectOperator extends Operator {
     @Override
     public void reset() {
         childOperator.reset();
+    }
+
+    public Operator getChild() {
+        return childOperator;
     }
 
     @Override

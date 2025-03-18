@@ -8,15 +8,16 @@ import net.sf.jsqlparser.expression.operators.relational.*;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
 
+import java.util.List;
 import java.util.Map;
 
 public class ExpressionEvaluator extends ExpressionVisitorAdapter {
     private Tuple tuple;
-    private Map<String, Integer> schema;
+    private Map<String, List<String>> schema;
     private boolean result;
     private int value;
 
-    public ExpressionEvaluator(Tuple tuple, Map<String, Integer> schema) {
+    public ExpressionEvaluator(Tuple tuple, Map<String, List<String>> schema) {
         this.tuple = tuple;
         this.schema = schema;
         this.result = false;
@@ -101,13 +102,11 @@ public class ExpressionEvaluator extends ExpressionVisitorAdapter {
 
     @Override
     public void visit(Column column) {
-        Table table = column.getTable();
-        String columnName = (table != null && table.getName() != null)
-                ? table.getName() + "." + column.getColumnName()
-                : column.getColumnName();
+        String tableName = column.getTable().getName();
+        String columnName = column.getColumnName();
 
-        if (schema.containsKey(columnName)) {
-            value = tuple.getValue(schema.get(columnName));
+        if (schema.containsKey(tableName)) {
+            value = tuple.getValue(schema.get(tableName).indexOf(columnName));
         } else {
             throw new RuntimeException("Column " + columnName + " not found in schema.");
         }
