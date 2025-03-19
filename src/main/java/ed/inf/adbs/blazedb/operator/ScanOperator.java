@@ -8,13 +8,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ScanOperator extends Operator {
-    private String tableName;
     private BufferedReader reader;
+    private String tableName;
     private String tableFilePath;
+    private List<String> tableSchema;
 
     public ScanOperator(String tableName) throws IOException {
         this.tableName = tableName;
         this.tableFilePath = DatabaseCatalog.getInstance("").getTableFilePath(tableName);
+        this.tableSchema = DatabaseCatalog.getInstance("").getTableSchema(tableName);
         this.reader = new BufferedReader(new FileReader(tableFilePath));
     }
 
@@ -48,5 +50,9 @@ public class ScanOperator extends Operator {
     @Override
     public String getTableName() {
         return tableName;
+    }
+
+    public List<String> getTableSchema() {
+        return tableSchema;
     }
 }

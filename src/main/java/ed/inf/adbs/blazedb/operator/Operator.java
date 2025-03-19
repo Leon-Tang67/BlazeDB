@@ -2,6 +2,8 @@ package ed.inf.adbs.blazedb.operator;
 
 import ed.inf.adbs.blazedb.Tuple;
 
+import java.util.List;
+
 /**
  * The abstract Operator class for the iterator model.
  *
@@ -21,4 +23,6 @@ public abstract class Operator {
     public abstract void reset();
 
     public abstract String getTableName();
+
+    public abstract List<String> getTableSchema();
 }

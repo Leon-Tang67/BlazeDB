@@ -31,7 +31,10 @@ public class DatabaseCatalog {
             while ((line = br.readLine()) != null) {
                 String[] parts = line.split(" ");
                 String tableName = parts[0];
-                List<String> columns = Arrays.asList(Arrays.copyOfRange(parts, 1, parts.length));
+                List<String> columns = new ArrayList<>();
+                for (int i = 1; i < parts.length; i++) {
+                    columns.add(tableName + "." + parts[i]);
+                }
                 tableSchemaMap.put(tableName, columns);
                 tableFileMap.put(tableName, databaseDir + "/data/" + tableName + ".csv");
             }

@@ -1,1 +1,1 @@
-SELECT Student.B, Enrolled.E FROM Student, Enrolled WHERE Student.A = Enrolled.A AND Student.B < Enrolled.E;
+SELECT Enrolled.E, Student.B, Course.E FROM Student, Enrolled, Course WHERE Student.A = Enrolled.A AND Student.B < Enrolled.E;

@@ -12,15 +12,20 @@ import java.util.List;
 public class ProjectOperator extends Operator {
     private Operator childOperator;
     private List<Integer> columnIndexes;
+    private List<String> schema;
 
     public ProjectOperator(Operator childOperator, List<SelectItem<?>> selectedColumns) throws IOException {
         this.childOperator = childOperator;
-        List<String> schema = DatabaseCatalog.getInstance("").getTableSchema(childOperator.getTableName());
+        this.schema = childOperator.getTableSchema();
 
         // Convert column names to indexes
         columnIndexes = new ArrayList<>();
-        for (SelectItem item : selectedColumns) {
-            columnIndexes.add(schema.indexOf(((Column) item.getExpression()).getColumnName()));
+        for (SelectItem<?> item : selectedColumns) {
+            Column column = ((Column) item.getExpression());
+            String tableName = column.getTable().getName();
+            String columnName = column.getColumnName();
+            String columnFullName = tableName + "." + columnName;
+            columnIndexes.add(schema.indexOf(columnFullName));
         }
     }
 
@@ -45,5 +50,15 @@ public class ProjectOperator extends Operator {
     @Override
     public String getTableName() {
         return childOperator.getTableName();
+    }
+
+    @Override
+    public List<String> getTableSchema() {
+        List<String> schema = childOperator.getTableSchema();
+        List<String> projectedSchema = new ArrayList<>();
+        for (int index : columnIndexes) {
+            projectedSchema.add(schema.get(index));
+        }
+        return projectedSchema;
     }
 }

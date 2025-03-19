@@ -8,8 +8,8 @@ public class JoinOperatorTest extends TestCase {
 
     public void testJoinOperator() {
         String databaseDir = "samples/db";
-        String inputFile = "samples/input/query5.sql";
-        String outputFile = "samples/output/query5.csv";
+        String inputFile = "samples/input/query4.sql";
+        String outputFile = "samples/output/query.csv";
 
         try {
             // Initialize DatabaseCatalog

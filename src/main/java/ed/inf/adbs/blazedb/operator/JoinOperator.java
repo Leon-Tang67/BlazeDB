@@ -1,6 +1,5 @@
 package ed.inf.adbs.blazedb.operator;
 
-import ed.inf.adbs.blazedb.DatabaseCatalog;
 import ed.inf.adbs.blazedb.ExpressionEvaluator;
 import ed.inf.adbs.blazedb.Tuple;
 import net.sf.jsqlparser.expression.Expression;
@@ -15,33 +14,24 @@ public class JoinOperator extends Operator {
     private Operator leftChild;
     private Operator rightChild;
     private Expression joinCondition;
+    private List<String> schema;
     private Tuple leftTuple;
-    private List<String> leftSchema;
-    private List<String> rightSchema;
 
     public JoinOperator(Operator leftChild, Operator rightChild, Expression joinCondition) throws IOException {
         this.leftChild = leftChild;
         this.rightChild = rightChild;
         this.joinCondition = joinCondition;
+        this.schema = new ArrayList<>();
+        this.schema.addAll(leftChild.getTableSchema());
+        this.schema.addAll(rightChild.getTableSchema());
         this.leftTuple = leftChild.getNextTuple();
-        this.leftSchema = DatabaseCatalog.getInstance("").getTableSchema(leftChild.getTableName());
-        this.rightSchema = DatabaseCatalog.getInstance("").getTableSchema(rightChild.getTableName());
     }
 
     @Override
     public Tuple getNextTuple() {
         Tuple rightTuple;
         while (leftTuple != null) {
-            Map<String, List<String>> fullSchema = new HashMap<>();
-            fullSchema.put(leftChild.getTableName(), leftSchema);
-
-            Map<String, Tuple> tupleMap = new HashMap<>();
-            tupleMap.put(leftChild.getTableName(), leftTuple);
-
             while ((rightTuple = rightChild.getNextTuple()) != null) {
-
-                tupleMap.put(rightChild.getTableName(), rightTuple);
-
                 List<Integer> tupleValues = new ArrayList<>();
                 tupleValues.addAll(leftTuple.getValues());
                 tupleValues.addAll(rightTuple.getValues());
@@ -51,14 +41,12 @@ public class JoinOperator extends Operator {
                     return joinedTuples; // Cross product case
                 }
 
-                fullSchema.put(rightChild.getTableName(), rightSchema);
-                ExpressionEvaluator evaluator = new ExpressionEvaluator(tupleMap, fullSchema);
+                ExpressionEvaluator evaluator = new ExpressionEvaluator(joinedTuples, schema);
                 joinCondition.accept(evaluator);
 
                 if (evaluator.getResult()) {
                     return joinedTuples; // Return only if the condition holds
                 }
-                tupleMap.remove(rightChild.getTableName());
             }
 
             rightChild.reset(); // Reset right child for next left tuple
@@ -71,11 +59,15 @@ public class JoinOperator extends Operator {
     public void reset() {
         leftChild.reset();
         rightChild.reset();
-        leftTuple = leftChild.getNextTuple();
     }
 
     @Override
     public String getTableName() {
         return ""; // Not relevant for joins
+    }
+
+    @Override
+    public List<String> getTableSchema() {
+        return schema;
     }
 }

@@ -7,17 +7,16 @@ import net.sf.jsqlparser.expression.operators.relational.*;
 import net.sf.jsqlparser.schema.Column;
 
 import java.util.List;
-import java.util.Map;
 
 public class ExpressionEvaluator extends ExpressionVisitorAdapter {
-    private Map<String, Tuple> tupleMap;
-    private Map<String, List<String>> schemaMap;
+    private Tuple tuple;
+    private List<String> schema;
     private boolean result;
     private int value;
 
-    public ExpressionEvaluator(Map<String, Tuple> tupleMap, Map<String, List<String>> schemaMap) {
-        this.tupleMap = tupleMap;
-        this.schemaMap = schemaMap;
+    public ExpressionEvaluator(Tuple tuple, List<String> schema) {
+        this.tuple = tuple;
+        this.schema = schema;
         this.result = false;
     }
 
@@ -27,10 +26,10 @@ public class ExpressionEvaluator extends ExpressionVisitorAdapter {
 
     @Override
     public void visit(AndExpression andExpr) {
-        ExpressionEvaluator leftEval = new ExpressionEvaluator(tupleMap, schemaMap);
+        ExpressionEvaluator leftEval = new ExpressionEvaluator(tuple, schema);
         andExpr.getLeftExpression().accept(leftEval);
 
-        ExpressionEvaluator rightEval = new ExpressionEvaluator(tupleMap, schemaMap);
+        ExpressionEvaluator rightEval = new ExpressionEvaluator(tuple, schema);
         andExpr.getRightExpression().accept(rightEval);
 
         result = leftEval.getResult() && rightEval.getResult();
@@ -67,10 +66,10 @@ public class ExpressionEvaluator extends ExpressionVisitorAdapter {
     }
 
     private void evaluateComparison(BinaryExpression expr, String operator) {
-        ExpressionEvaluator leftEval = new ExpressionEvaluator(tupleMap, schemaMap);
+        ExpressionEvaluator leftEval = new ExpressionEvaluator(tuple, schema);
         expr.getLeftExpression().accept(leftEval);
 
-        ExpressionEvaluator rightEval = new ExpressionEvaluator(tupleMap, schemaMap);
+        ExpressionEvaluator rightEval = new ExpressionEvaluator(tuple, schema);
         expr.getRightExpression().accept(rightEval);
 
         int leftValue = leftEval.value;
@@ -102,11 +101,12 @@ public class ExpressionEvaluator extends ExpressionVisitorAdapter {
     public void visit(Column column) {
         String tableName = column.getTable().getName();
         String columnName = column.getColumnName();
+        String columnFullName = tableName + "." + columnName;
 
-        if (schemaMap.containsKey(tableName)) {
-            value = tupleMap.get(tableName).getValue(schemaMap.get(tableName).indexOf(columnName));
+        if (schema.contains(columnFullName)) {
+            value = tuple.getValue(schema.indexOf(columnFullName));
         } else {
-            throw new RuntimeException("Column " + columnName + " not found in schema.");
+            throw new RuntimeException("Column " + columnFullName + " not found in schema.");
         }
     }
 
@@ -117,10 +117,10 @@ public class ExpressionEvaluator extends ExpressionVisitorAdapter {
 
     @Override
     public void visit(Multiplication multiplication) {
-        ExpressionEvaluator leftEval = new ExpressionEvaluator(tupleMap, schemaMap);
+        ExpressionEvaluator leftEval = new ExpressionEvaluator(tuple, schema);
         multiplication.getLeftExpression().accept(leftEval);
 
-        ExpressionEvaluator rightEval = new ExpressionEvaluator(tupleMap, schemaMap);
+        ExpressionEvaluator rightEval = new ExpressionEvaluator(tuple, schema);
         multiplication.getRightExpression().accept(rightEval);
 
         value = leftEval.value * rightEval.value;
