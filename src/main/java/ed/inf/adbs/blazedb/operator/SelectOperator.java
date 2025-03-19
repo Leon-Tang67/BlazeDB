@@ -27,7 +27,9 @@ public class SelectOperator extends Operator {
     public Tuple getNextTuple() {
         Tuple tuple;
         while ((tuple = childOperator.getNextTuple()) != null) {
-            ExpressionEvaluator evaluator = new ExpressionEvaluator(tuple, schema);
+            Map<String, Tuple> tupleMap = new HashMap<>();
+            tupleMap.put(childOperator.getTableName(), tuple);
+            ExpressionEvaluator evaluator = new ExpressionEvaluator(tupleMap, schema);
             selectionCondition.accept(evaluator);
             if (evaluator.getResult()) {
                 return tuple;

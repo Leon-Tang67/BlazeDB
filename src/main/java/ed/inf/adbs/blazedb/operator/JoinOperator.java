@@ -34,22 +34,31 @@ public class JoinOperator extends Operator {
         while (leftTuple != null) {
             Map<String, List<String>> fullSchema = new HashMap<>();
             fullSchema.put(leftChild.getTableName(), leftSchema);
+
+            Map<String, Tuple> tupleMap = new HashMap<>();
+            tupleMap.put(leftChild.getTableName(), leftTuple);
+
             while ((rightTuple = rightChild.getNextTuple()) != null) {
-                List<Integer> joinedValues = new ArrayList<>(leftTuple.getValues());
-                joinedValues.addAll(rightTuple.getValues());
-                Tuple joinedTuple = new Tuple(joinedValues);
+
+                tupleMap.put(rightChild.getTableName(), rightTuple);
+
+                List<Integer> tupleValues = new ArrayList<>();
+                tupleValues.addAll(leftTuple.getValues());
+                tupleValues.addAll(rightTuple.getValues());
+                Tuple joinedTuples = new Tuple(tupleValues);
 
                 if (joinCondition == null) {
-                    return joinedTuple; // Cross product case
+                    return joinedTuples; // Cross product case
                 }
 
                 fullSchema.put(rightChild.getTableName(), rightSchema);
-                ExpressionEvaluator evaluator = new ExpressionEvaluator(joinedTuple, fullSchema);
+                ExpressionEvaluator evaluator = new ExpressionEvaluator(tupleMap, fullSchema);
                 joinCondition.accept(evaluator);
 
                 if (evaluator.getResult()) {
-                    return joinedTuple; // Return only if the condition holds
+                    return joinedTuples; // Return only if the condition holds
                 }
+                tupleMap.remove(rightChild.getTableName());
             }
 
             rightChild.reset(); // Reset right child for next left tuple

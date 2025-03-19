@@ -15,6 +15,8 @@ public class Tuple {
         this.values = new ArrayList<>(values);
     }
 
+    public Tuple() {}
+
     public Integer getValue(int index) {
         return values.get(index);
     }

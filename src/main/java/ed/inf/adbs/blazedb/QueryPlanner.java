@@ -48,18 +48,17 @@ public class QueryPlanner {
     }
 
     private Operator buildJoinTree() throws IOException {
-        Iterator<String> tables = getFromTables().iterator();
-        Operator root = tableScans.get(tables.next());
+        Iterator<String> tableNames = getFromTables().iterator();
+        Operator root = tableScans.get(tableNames.next());
 
         // todo: handle multiple joins
-        while (tables.hasNext()) {
-            String nextTable = tables.next();
-            Operator right = tableScans.get(nextTable);
-            Expression joinCondition = findJoinCondition(root.getTableName(), nextTable);
+        while (tableNames.hasNext()) {
+            String nextTableName = tableNames.next();
+            Operator right = tableScans.get(nextTableName);
+            Expression joinCondition = findJoinCondition(root.getTableName(), nextTableName);
             root = new JoinOperator(root, right, joinCondition);
         }
 
-//        if (!select.getSelectItems().get(0).toString().equals("*")) {
         if (!(select.getSelectItems().get(0).getExpression() instanceof AllColumns)) {
             root = new ProjectOperator(root, select.getSelectItems());
         }
@@ -84,11 +83,11 @@ private Expression findJoinCondition(String leftTable, String rightTable) {
 }
 
     private List<String> getFromTables() {
-        List<String> tables = new ArrayList<>();
-        tables.add(select.getFromItem().toString());
+        List<String> tableNames = new ArrayList<>();
+        tableNames.add(select.getFromItem().toString());
         if (select.getJoins() != null) {
-            select.getJoins().forEach(join -> tables.add(join.toString()));
+            select.getJoins().forEach(join -> tableNames.add(join.toString()));
         }
-        return tables;
+        return tableNames;
     }
 }

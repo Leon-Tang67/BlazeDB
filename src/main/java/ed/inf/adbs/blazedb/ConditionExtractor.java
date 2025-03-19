@@ -46,13 +46,12 @@ public class ConditionExtractor {
     }
 
     public static boolean isJoinCondition(Expression condition, String leftTable, String rightTable) {
-        if (condition instanceof EqualsTo) {
-            EqualsTo equalsTo = (EqualsTo) condition;
-            String left = getTableName(equalsTo.getLeftExpression());
-            String right = getTableName(equalsTo.getRightExpression());
+        if (condition instanceof BinaryExpression) {
+            BinaryExpression binaryExpr = (BinaryExpression) condition;
+            String left = getTableName(binaryExpr.getLeftExpression());
+            String right = getTableName(binaryExpr.getRightExpression());
             return (left != null && right != null) && ((left.equals(leftTable) && right.equals(rightTable)) || (left.equals(rightTable) && right.equals(leftTable)));
         }
-        // TODO: Handle other types of join conditions
         return false;
     }
 }
