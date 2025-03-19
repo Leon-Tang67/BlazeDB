@@ -3,11 +3,8 @@ package ed.inf.adbs.blazedb;
 import ed.inf.adbs.blazedb.operator.*;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
-import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
-import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.AllColumns;
 import net.sf.jsqlparser.statement.select.PlainSelect;
-import net.sf.jsqlparser.statement.select.SelectItem;
 
 import java.io.IOException;
 import java.util.*;
@@ -70,6 +67,15 @@ private Expression findJoinCondition(String leftTable, String rightTable) {
     for (Expression cond : joinConditions) {
         if (ConditionExtractor.isJoinCondition(cond, leftTable, rightTable)) {
             conditions.add(cond);
+        }
+    }
+    if (conditions.isEmpty() && leftTable.contains("JOIN")) {
+        String[] joinedTables = leftTable.split(" JOIN ");
+        for (String table : joinedTables) {
+            Expression condition = findJoinCondition(table, rightTable);
+            if (condition != null) {
+                conditions.add(condition);
+            }
         }
     }
     if (conditions.isEmpty()) {

@@ -5,10 +5,8 @@ import ed.inf.adbs.blazedb.Tuple;
 import net.sf.jsqlparser.expression.Expression;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Map;
 
 public class JoinOperator extends Operator {
     private Operator leftChild;
@@ -63,7 +61,7 @@ public class JoinOperator extends Operator {
 
     @Override
     public String getTableName() {
-        return ""; // Not relevant for joins
+        return leftChild.getTableName() + " JOIN " + rightChild.getTableName();
     }
 
     @Override
