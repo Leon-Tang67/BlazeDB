@@ -29,4 +29,17 @@ public class Tuple {
     public String toString() {
         return String.join(", ", values.stream().map(String::valueOf).toArray(String[]::new));
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Tuple tuple = (Tuple) o;
+        return Objects.equals(values, tuple.values);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(values);
+    }
 }

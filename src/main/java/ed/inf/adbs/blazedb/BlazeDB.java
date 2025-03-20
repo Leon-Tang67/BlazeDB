@@ -100,7 +100,7 @@ public class BlazeDB {
 		try {
 //			Statement statement = CCJSqlParserUtil.parse(new FileReader(filename));
 //          Statement statement = CCJSqlParserUtil.parse("SELECT Course.cid, Student.name FROM Course, Student WHERE Student.sid = 3");
-			int query_selector = 5;
+			int query_selector = 7;
 			Statement statement = null;
 			switch (query_selector) {
 				case 1:
@@ -122,7 +122,7 @@ public class BlazeDB {
 					statement = CCJSqlParserUtil.parse("SELECT * FROM Student, Course WHERE Student.C < Course.E;");
 					break;
 				case 7:
-					statement = CCJSqlParserUtil.parse("SELECT DISTINCT Enrolled.A FROM Enrolled;");
+					statement = CCJSqlParserUtil.parse("SELECT DISTINCT Student.A, Enrolled.A FROM Student, Enrolled WHERE Student.A = Enrolled.A;");
 					break;
 				case 8:
 					statement = CCJSqlParserUtil.parse("SELECT * FROM Student ORDER BY Student.B;");
@@ -144,9 +144,9 @@ public class BlazeDB {
 				PlainSelect select = (PlainSelect) statement;
 				System.out.println("Statement: " + select);
 				System.out.println("SELECT items: " + select.getSelectItems());
-				System.out.println("WHERE expression: " + select.getWhere().getClass().getName());
-				System.out.println("From item: " + select.getFromItem().getClass().getName());
-				System.out.println("Joins: " + select.getJoins().get(0).getClass().getName());
+				System.out.println("WHERE expression: " + select.getWhere());
+				System.out.println("From item: " + select.getFromItem());
+				System.out.println("Joins: " + select.getJoins().get(0));
 				System.out.println("Group by: " + select.getGroupBy());
 				System.out.println("Order by: " + select.getOrderByElements());
 				System.out.println("Distinct: " + select.getDistinct());

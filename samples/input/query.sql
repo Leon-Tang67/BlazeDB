@@ -1,1 +1,1 @@
-SELECT * FROM Student, Enrolled WHERE Student.A = Enrolled.A ORDER BY Student.B, Enrolled.H;
+SELECT Enrolled.A, Enrolled.E FROM Enrolled;

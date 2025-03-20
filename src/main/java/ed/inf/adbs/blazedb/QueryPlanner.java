@@ -25,7 +25,7 @@ public class QueryPlanner {
     public Operator generatePlan() throws IOException {
         extractConditions(select.getWhere());
         buildTableScans();
-        return buildJoinTree();
+        return buildOperatorTree();
     }
 
     private void extractConditions(Expression where) {
@@ -44,7 +44,7 @@ public class QueryPlanner {
         }
     }
 
-    private Operator buildJoinTree() throws IOException {
+    private Operator buildOperatorTree() throws IOException {
         Iterator<String> tableNames = getFromTables().iterator();
         Operator root = tableScans.get(tableNames.next());
 
@@ -61,6 +61,10 @@ public class QueryPlanner {
 
         if (select.getOrderByElements() != null) {
             root = new SortOperator(root, select.getOrderByElements());
+        }
+
+        if (select.getDistinct() != null) {
+            root = new DuplicateEliminationOperator(root);
         }
 
         return root;
