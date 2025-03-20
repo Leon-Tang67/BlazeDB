@@ -41,7 +41,6 @@ public class ScanOperator extends Operator {
     public void reset() {
         try {
             reader.close();
-            reader = new BufferedReader(new FileReader(tableFilePath));
         } catch (IOException e) {
             throw new RuntimeException("Error resetting ScanOperator for table: " + tableName, e);
         }

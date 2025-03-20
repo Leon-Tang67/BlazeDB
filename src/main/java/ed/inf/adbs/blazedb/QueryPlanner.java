@@ -31,7 +31,7 @@ public class QueryPlanner {
     private void extractConditions(Expression where) {
         if (where == null) return;
         // Recursively separate join and selection conditions
-        ConditionExtractor.extract(where, selectionConditions, joinConditions);
+        ConditionExtractor.extract(where, this.select, selectionConditions, joinConditions);
     }
 
     private void buildTableScans() throws IOException {
@@ -48,7 +48,6 @@ public class QueryPlanner {
         Iterator<String> tableNames = getFromTables().iterator();
         Operator root = tableScans.get(tableNames.next());
 
-        // todo: handle multiple joins
         while (tableNames.hasNext()) {
             String nextTableName = tableNames.next();
             Operator right = tableScans.get(nextTableName);
