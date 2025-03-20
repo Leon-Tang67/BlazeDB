@@ -5,9 +5,7 @@ import ed.inf.adbs.blazedb.ExpressionEvaluator;
 import net.sf.jsqlparser.expression.Expression;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class SelectOperator extends Operator {
     private Operator childOperator;

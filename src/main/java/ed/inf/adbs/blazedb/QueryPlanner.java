@@ -58,34 +58,39 @@ public class QueryPlanner {
         if (!(select.getSelectItems().get(0).getExpression() instanceof AllColumns)) {
             root = new ProjectOperator(root, select.getSelectItems());
         }
+
+        if (select.getOrderByElements() != null) {
+            root = new SortOperator(root, select.getOrderByElements());
+        }
+
         return root;
     }
 
-private Expression findJoinCondition(String leftTable, String rightTable) {
-    List<Expression> conditions = new ArrayList<>();
-    for (Expression cond : joinConditions) {
-        if (ConditionExtractor.isJoinCondition(cond, leftTable, rightTable)) {
-            conditions.add(cond);
-        }
-    }
-    if (conditions.isEmpty() && leftTable.contains("JOIN")) {
-        String[] joinedTables = leftTable.split(" JOIN ");
-        for (String table : joinedTables) {
-            Expression condition = findJoinCondition(table, rightTable);
-            if (condition != null) {
-                conditions.add(condition);
+    private Expression findJoinCondition(String leftTable, String rightTable) {
+        List<Expression> conditions = new ArrayList<>();
+        for (Expression cond : joinConditions) {
+            if (ConditionExtractor.isJoinCondition(cond, leftTable, rightTable)) {
+                conditions.add(cond);
             }
         }
+        if (conditions.isEmpty() && leftTable.contains("JOIN")) {
+            String[] joinedTables = leftTable.split(" JOIN ");
+            for (String table : joinedTables) {
+                Expression condition = findJoinCondition(table, rightTable);
+                if (condition != null) {
+                    conditions.add(condition);
+                }
+            }
+        }
+        if (conditions.isEmpty()) {
+            return null;
+        }
+        Expression combinedCondition = conditions.get(0);
+        for (int i = 1; i < conditions.size(); i++) {
+            combinedCondition = new AndExpression(combinedCondition, conditions.get(i));
+        }
+        return combinedCondition;
     }
-    if (conditions.isEmpty()) {
-        return null;
-    }
-    Expression combinedCondition = conditions.get(0);
-    for (int i = 1; i < conditions.size(); i++) {
-        combinedCondition = new AndExpression(combinedCondition, conditions.get(i));
-    }
-    return combinedCondition;
-}
 
     private List<String> getFromTables() {
         List<String> tableNames = new ArrayList<>();
