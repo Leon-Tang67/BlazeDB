@@ -18,14 +18,14 @@ import java.util.List;
 public class SumOperatorTest extends TestCase {
 
     public void testSumOperator() {
-        singleTestSumOperator();
-//        multiTestSumOperator();
+//        singleTestSumOperator();
+        multiTestSumOperator();
     }
 
     public void multiTestSumOperator() {
         String databaseDir = "samples/db";
-        String inputFile = "samples/input/distinct-queries.sql";
-        String outputFile = "samples/output/distinct-queries.csv";
+        String inputFile = "samples/input/groupby-queries.sql";
+        String outputFile = "samples/output/groupby-queries.csv";
 
         try {
             // Initialize DatabaseCatalog

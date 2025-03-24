@@ -61,7 +61,7 @@ public class QueryPlanner {
             root = new ProjectOperator(root, select.getSelectItems());
         }
 
-        if (select.getSelectItems().stream().anyMatch(item -> item.toString().contains("SUM"))) {
+        if (select.getSelectItems().stream().anyMatch(item -> item.toString().contains("SUM")) || select.getGroupBy() != null) {
             if (select.getGroupBy() != null) {
                 root = new SumOperator(root, select.getSelectItems(), select.getGroupBy().getGroupByExpressionList());
             } else {
