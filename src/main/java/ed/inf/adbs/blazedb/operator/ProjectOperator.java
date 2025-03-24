@@ -1,12 +1,21 @@
 package ed.inf.adbs.blazedb.operator;
 
+import ed.inf.adbs.blazedb.ExpressionEvaluator;
 import ed.inf.adbs.blazedb.Tuple;
+import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.Function;
+import net.sf.jsqlparser.expression.LongValue;
+import net.sf.jsqlparser.expression.operators.arithmetic.Multiplication;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.SelectItem;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class ProjectOperator extends Operator {
     private Operator childOperator;
@@ -19,12 +28,55 @@ public class ProjectOperator extends Operator {
 
         // Convert column names to indexes
         columnIndexes = new ArrayList<>();
+        Set<String> columnNameSet = new HashSet<>();
         for (SelectItem<?> item : selectedColumns) {
-            Column column = ((Column) item.getExpression());
-            String tableName = column.getTable().getName();
-            String columnName = column.getColumnName();
-            String columnFullName = tableName + "." + columnName;
-            columnIndexes.add(schema.indexOf(columnFullName));
+            if (item.getExpression() instanceof Column) {
+                Column column = (Column) item.getExpression();
+                String columnFullName = column.getFullyQualifiedName();
+                if (!columnNameSet.contains(columnFullName)) {
+                    columnNameSet.add(columnFullName);
+                    columnIndexes.add(schema.indexOf(columnFullName));
+                }
+            } else if (item.toString().contains("SUM")) {
+                if (item.getExpression() instanceof Function) {
+                    Function function = (Function) item.getExpression();
+                    if (function.getParameters().get(0) instanceof Multiplication) {
+                        Multiplication multiplication = (Multiplication) function.getParameters().get(0);
+                        while (true) {
+                            if (multiplication.getRightExpression() instanceof Column) {
+                                Column column = (Column) multiplication.getRightExpression();
+                                String columnFullName = column.getFullyQualifiedName();
+                                if (!columnNameSet.contains(columnFullName)) {
+                                    columnNameSet.add(columnFullName);
+                                    columnIndexes.add(schema.indexOf(columnFullName));
+                                }
+                            }
+                            if (multiplication.getLeftExpression() instanceof Column) {
+                                Column column = (Column) multiplication.getLeftExpression();
+                                String columnFullName = column.getFullyQualifiedName();
+                                if (!columnNameSet.contains(columnFullName)) {
+                                    columnNameSet.add(columnFullName);
+                                    columnIndexes.add(schema.indexOf(columnFullName));
+                                }
+                                break;
+                            } else if (multiplication.getLeftExpression() instanceof LongValue) {
+                                break;
+                            } else if (multiplication.getLeftExpression() instanceof Multiplication) {
+                                multiplication = (Multiplication) multiplication.getLeftExpression();
+                            }
+                        }
+                    } else if (function.getParameters().get(0) instanceof Column) {
+                        Column column = (Column) function.getParameters().get(0);
+                        String columnFullName = column.getFullyQualifiedName();
+                        if (!columnNameSet.contains(columnFullName)) {
+                            columnNameSet.add(columnFullName);
+                            columnIndexes.add(schema.indexOf(columnFullName));
+                        }
+                    } else if (function.getParameters().get(0) instanceof LongValue) {
+                        columnIndexes.addAll(IntStream.range(0, schema.size()).boxed().collect(Collectors.toList()));
+                    }
+                }
+            }
         }
     }
 

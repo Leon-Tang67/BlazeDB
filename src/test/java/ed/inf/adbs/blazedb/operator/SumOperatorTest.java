@@ -15,17 +15,17 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
-public class SortOperatorTest extends TestCase {
+public class SumOperatorTest extends TestCase {
 
-    public void testSortOperator() {
-        singleTestSortOperator();
-//        multiTestSortOperator();
+    public void testSumOperator() {
+        singleTestSumOperator();
+//        multiTestSumOperator();
     }
 
-    public void multiTestSortOperator() {
+    public void multiTestSumOperator() {
         String databaseDir = "samples/db";
-        String inputFile = "samples/input/orderby-queries.sql";
-        String outputFile = "samples/output/orderby-queries.csv";
+        String inputFile = "samples/input/distinct-queries.sql";
+        String outputFile = "samples/output/distinct-queries.csv";
 
         try {
             // Initialize DatabaseCatalog
@@ -63,7 +63,7 @@ public class SortOperatorTest extends TestCase {
         }
     }
 
-    public void singleTestSortOperator() {
+    public void singleTestSumOperator() {
         String databaseDir = "samples/db";
         String inputFile = "samples/input/query.sql";
         String outputFile = "samples/output/query.csv";
@@ -79,4 +79,5 @@ public class SortOperatorTest extends TestCase {
             e.printStackTrace();
         }
     }
+
 }

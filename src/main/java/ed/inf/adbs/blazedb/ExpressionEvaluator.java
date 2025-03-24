@@ -24,6 +24,10 @@ public class ExpressionEvaluator extends ExpressionVisitorAdapter {
         return result;
     }
 
+    public int getValue() {
+        return value;
+    }
+
     @Override
     public void visit(AndExpression andExpr) {
         ExpressionEvaluator leftEval = new ExpressionEvaluator(tuple, schema);
@@ -99,10 +103,7 @@ public class ExpressionEvaluator extends ExpressionVisitorAdapter {
 
     @Override
     public void visit(Column column) {
-        String tableName = column.getTable().getName();
-        String columnName = column.getColumnName();
-        String columnFullName = tableName + "." + columnName;
-
+        String columnFullName = column.getFullyQualifiedName();
         if (schema.contains(columnFullName)) {
             value = tuple.getValue(schema.indexOf(columnFullName));
         } else {
@@ -131,7 +132,19 @@ public class ExpressionEvaluator extends ExpressionVisitorAdapter {
 //        if (function.getName().equalsIgnoreCase("SUM")) {
 //            if (function.getParameters() != null && function.getParameters().getExpressions().size() == 1) {
 //                Expression param = function.getParameters().getExpressions().get(0);
-//                param.accept(this);
+//                param.accept(new ExpressionVisitorAdapter() {
+//                    @Override
+//                    public void visit(Column column) {
+//                        // Handle the column (e.g., Enrolled.H)
+//                    }
+//
+//                    @Override
+//                    public void visit(BinaryExpression binaryExpression) {
+//                        // Handle binary expressions (e.g., Enrolled.H * Enrolled.H)
+//                        binaryExpression.getLeftExpression().accept(this);
+//                        binaryExpression.getRightExpression().accept(this);
+//                    }
+//                });
 //            } else {
 //                throw new RuntimeException("SUM function must have exactly one parameter.");
 //            }

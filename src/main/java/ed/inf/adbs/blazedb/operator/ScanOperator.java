@@ -23,6 +23,7 @@ public class ScanOperator extends Operator {
     @Override
     public Tuple getNextTuple() {
         try {
+            // TODO: Handle empty tables
             String line = reader.readLine();
             if (line == null) return null;
 

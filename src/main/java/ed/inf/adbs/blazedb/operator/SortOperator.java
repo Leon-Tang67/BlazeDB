@@ -13,7 +13,6 @@ public class SortOperator extends Operator{
     private Operator childOperator;
     private List<Integer> columnIndexes;
     private List<String> schema;
-    private int[] sortIndexes;
     private List<Tuple> tuples;
     private int currentTupleIndex;
 
@@ -27,21 +26,8 @@ public class SortOperator extends Operator{
         columnIndexes = new ArrayList<>();
         for (OrderByElement element : orderByElements) {
             Column column = ((Column) element.getExpression());
-            String tableName = column.getTable().getName();
-            String columnName = column.getColumnName();
-            String columnFullName = tableName + "." + columnName;
+            String columnFullName = column.getFullyQualifiedName();
             columnIndexes.add(schema.indexOf(columnFullName));
-        }
-
-        // Convert order by elements to indexes and orders
-        sortIndexes = new int[orderByElements.size()];
-        for (int i = 0; i < orderByElements.size(); i++) {
-            OrderByElement element = orderByElements.get(i);
-            Column column = ((Column) element.getExpression());
-            String tableName = column.getTable().getName();
-            String columnName = column.getColumnName();
-            String columnFullName = tableName + "." + columnName;
-            sortIndexes[i] = schema.indexOf(columnFullName);
         }
     }
 
@@ -57,8 +43,8 @@ public class SortOperator extends Operator{
             Collections.sort(tuples, new Comparator<Tuple>() {
                 @Override
                 public int compare(Tuple t1, Tuple t2) {
-                    for (int i = 0; i < sortIndexes.length; i++) {
-                        int index = sortIndexes[i];
+                    for (int i = 0; i < columnIndexes.size(); i++) {
+                        int index = columnIndexes.get(i);
                         int value1 = t1.getValue(index);
                         int value2 = t2.getValue(index);
                         if (value1 != value2) {
