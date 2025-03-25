@@ -1,4 +1,15 @@
+SELECT * FROM Student;
+SELECT Student.A FROM Student;
+SELECT Student.D, Student.B, Student.A FROM Student;
+SELECT * FROM Student WHERE Student.A < 3;
+SELECT * FROM Student, Enrolled WHERE Student.A = Enrolled.A;
+SELECT * FROM Student, Course WHERE Student.C < Course.E;
+SELECT DISTINCT Enrolled.A FROM Enrolled;
+SELECT * FROM Student ORDER BY Student.B;
 SELECT Enrolled.E, SUM(Enrolled.H * Enrolled.H) FROM Enrolled GROUP BY Enrolled.E;
 SELECT SUM(1) FROM Student GROUP BY Student.B;
 SELECT Student.B, Student.C FROM Student, Enrolled WHERE Student.A = Enrolled.A GROUP BY Student.B, Student.C ORDER BY Student.C, Student.B;
 SELECT SUM(1), SUM(Student.A) FROM Student, Enrolled;
+SELECT * FROM Student, Enrolled, Course WHERE Student.A = Enrolled.A AND Enrolled.E = Course.E;
+SELECT DISTINCT Student.A, Enrolled.A FROM Student, Enrolled WHERE Student.A = Enrolled.A;
+SELECT Student.B, Student.C, SUM(1), SUM(Student.A) FROM Student, Enrolled GROUP BY Student.B, Student.C;

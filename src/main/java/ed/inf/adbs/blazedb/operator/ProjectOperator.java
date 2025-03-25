@@ -6,6 +6,7 @@ import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.Function;
 import net.sf.jsqlparser.expression.LongValue;
 import net.sf.jsqlparser.expression.operators.arithmetic.Multiplication;
+import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.SelectItem;
 
@@ -22,7 +23,7 @@ public class ProjectOperator extends Operator {
     private List<Integer> columnIndexes;
     private List<String> schema;
 
-    public ProjectOperator(Operator childOperator, List<SelectItem<?>> selectedColumns) throws IOException {
+    public ProjectOperator(Operator childOperator, List<SelectItem<?>> selectedColumns, ExpressionList groupByColumns) throws IOException {
         this.childOperator = childOperator;
         this.schema = childOperator.getTableSchema();
 
@@ -38,6 +39,7 @@ public class ProjectOperator extends Operator {
                     columnIndexes.add(schema.indexOf(columnFullName));
                 }
             } else if (item.toString().contains("SUM")) {
+                // TODO: toggle to the other side and break
                 if (item.getExpression() instanceof Function) {
                     Function function = (Function) item.getExpression();
                     if (function.getParameters().get(0) instanceof Multiplication) {
@@ -51,6 +53,7 @@ public class ProjectOperator extends Operator {
                                     columnIndexes.add(schema.indexOf(columnFullName));
                                 }
                             }
+                            // TODO: add comments
                             if (multiplication.getLeftExpression() instanceof Column) {
                                 Column column = (Column) multiplication.getLeftExpression();
                                 String columnFullName = column.getFullyQualifiedName();
@@ -78,6 +81,17 @@ public class ProjectOperator extends Operator {
                 }
             }
         }
+        if (!selectedColumns.toString().contains("SUM") && groupByColumns != null) {
+            for (Object expression : groupByColumns) {
+                Column column = (Column) expression;
+                String columnFullName = column.getFullyQualifiedName();
+                if (!columnNameSet.contains(columnFullName)) {
+                    columnNameSet.add(columnFullName);
+                    columnIndexes.add(schema.indexOf(columnFullName));
+                }
+            }
+        }
+
     }
 
     @Override

@@ -58,7 +58,11 @@ public class QueryPlanner {
 
         // TODO: solve the case where there is a combination of * and SUM
         if (!(select.getSelectItems().get(0).getExpression() instanceof AllColumns)) {
-            root = new ProjectOperator(root, select.getSelectItems());
+            if (select.getGroupBy() != null) {
+                root = new ProjectOperator(root, select.getSelectItems(), select.getGroupBy().getGroupByExpressionList());
+            } else {
+                root = new ProjectOperator(root, select.getSelectItems(), null);
+            }
         }
 
         if (select.getSelectItems().stream().anyMatch(item -> item.toString().contains("SUM")) || select.getGroupBy() != null) {

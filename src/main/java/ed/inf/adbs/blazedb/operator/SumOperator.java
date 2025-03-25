@@ -12,28 +12,28 @@ public class SumOperator extends Operator {
     private Operator childOperator;
     private List<String> schema;
     private List<SelectItem<?>> selectedColumns;
-    private List<Integer> sumColumnIndexes;
+    private List<Integer> sumExpIndexes;
     private ExpressionList groupByColumns;
     private List<Integer> groupKey;
-    private Map<List<Integer>, List<Integer>> groupSums;
+    private Map<List<Integer>, List<Integer>> groupColToTupleAndSumMapping;
     private Iterator<Map.Entry<List<Integer>, List<Integer>>> groupIterator;
 
     public SumOperator(Operator childOperator, List<SelectItem<?>> selectedColumns, ExpressionList groupByColumns) {
         this.childOperator = childOperator;
         this.schema = childOperator.getTableSchema();
         this.selectedColumns = selectedColumns;
-        this.sumColumnIndexes = new ArrayList<>();
+        this.sumExpIndexes = new ArrayList<>();
         this.groupByColumns = groupByColumns;
         this.groupKey = new ArrayList<>();
-        this.groupSums = new HashMap<>();
+        this.groupColToTupleAndSumMapping = new HashMap<>();
         this.groupIterator = null;
 
-        int i = 0;
+        int selectedColumnsIndex = 0;
         for (SelectItem<?> item : selectedColumns) {
             if (item.getExpression() instanceof Column) {
-                i++;
+                selectedColumnsIndex++;
             } else if (item.toString().contains("SUM")) {
-                sumColumnIndexes.add(i++);
+                sumExpIndexes.add(selectedColumnsIndex++);
             }
         }
     }
@@ -42,7 +42,7 @@ public class SumOperator extends Operator {
     public Tuple getNextTuple() {
         if (groupIterator == null) {
             computeGroupSums();
-            groupIterator = groupSums.entrySet().iterator();
+            groupIterator = groupColToTupleAndSumMapping.entrySet().iterator();
         }
 
         if (groupIterator.hasNext()) {
@@ -80,29 +80,27 @@ public class SumOperator extends Operator {
                     String columnFullName = column.getFullyQualifiedName();
                     groupKey.add(tuple.getValue(schema.indexOf(columnFullName)));
                 }
-                if (!groupSums.containsKey(groupKey)) {
-                    groupSums.put(groupKey, new ArrayList<>(tuple.getValues()));
+                if (!groupColToTupleAndSumMapping.containsKey(groupKey)) {
+                    groupColToTupleAndSumMapping.put(groupKey, new ArrayList<>(tuple.getValues()));
                 }
             } else {
-                if (groupSums.keySet().isEmpty()) {
+                if (groupColToTupleAndSumMapping.keySet().isEmpty()) {
                     groupKey = Collections.singletonList(0);
-                    groupSums.put(groupKey, new ArrayList<>(tuple.getValues()));
+                    groupColToTupleAndSumMapping.put(groupKey, new ArrayList<>(tuple.getValues()));
                 }
             }
-            for (int i = 0; i < sumColumnIndexes.size(); i++) {
-                int currentIndex = sumColumnIndexes.get(i);
+            for (int i = 0; i < sumExpIndexes.size(); i++) {
+                int currentIndex = sumExpIndexes.get(i);
                 ExpressionEvaluator evaluator = new ExpressionEvaluator(tuple, schema);
                 selectedColumns.get(currentIndex).accept(evaluator);
 
-                int value = evaluator.getValue();
+                int sumValue = evaluator.getValue();
 
-                List<Integer> existingValue = groupSums.get(groupKey);
-                if (existingValue != null) {
-                    if (existingValue.size() <= i+tupleLength) {
-                        existingValue.add(0);
-                    }
-                    existingValue.set(i+tupleLength, existingValue.get(i+tupleLength) + value);
+                List<Integer> existingValue = groupColToTupleAndSumMapping.get(groupKey);
+                if (existingValue.size() <= i+tupleLength) {
+                    existingValue.add(0);
                 }
+                existingValue.set(i+tupleLength, existingValue.get(i+tupleLength) + sumValue);
             }
         }
     }
@@ -110,7 +108,7 @@ public class SumOperator extends Operator {
     @Override
     public void reset() {
         childOperator.reset();
-        groupSums.clear();
+        groupColToTupleAndSumMapping.clear();
         groupIterator = null;
     }
 
