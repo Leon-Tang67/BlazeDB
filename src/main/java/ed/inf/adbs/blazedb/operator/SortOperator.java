@@ -9,6 +9,23 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+/**
+ * The SortOperator class is responsible for sorting the tuples based on the ORDER BY clause.
+ * It takes a child operator as input and sorts the tuples based on the specified columns.
+ *
+ * The SortOperator class contains the following methods:
+ * - getNextTuple(): Retrieves the next tuple that satisfies the ORDER BY clause.
+ * - reset(): Resets the iterator to the start.
+ * - getTableName(): Returns the name of the table.
+ * - getTableSchema(): Returns the schema of the table.
+ *
+ * The SortOperator class also contains the following instance variables:
+ * - childOperator: The child operator of the SortOperator.
+ * - columnIndexes: A list of column indexes to be sorted.
+ * - schema: The schema of the table.
+ * - tuplesList: A list of tuples to be sorted.
+ * - currentTupleIndex: The index of the current tuple in the sorted list.
+ */
 public class SortOperator extends Operator{
     private final Operator childOperator;
     private final List<Integer> columnIndexes;
@@ -22,7 +39,7 @@ public class SortOperator extends Operator{
         this.tuplesList = new ArrayList<>();
         this.currentTupleIndex = 0;
 
-        // Convert column names to indexes
+        // Convert column names in the ORDER BY clause to indexes for sorting
         columnIndexes = new ArrayList<>();
         for (OrderByElement element : orderByElements) {
             Column column = ((Column) element.getExpression());
@@ -35,11 +52,13 @@ public class SortOperator extends Operator{
     public Tuple getNextTuple() {
         if (tuplesList.isEmpty()) {
             Tuple tuple;
+
+            // Read all tuples from the child operator. This is the blocking point
             while ((tuple = childOperator.getNextTuple()) != null) {
                 tuplesList.add(tuple);
             }
 
-            // Sort tuples
+            // Sort tuples with customized comparator based on ORDER BY columns
             Collections.sort(tuplesList, new Comparator<Tuple>() {
                 @Override
                 public int compare(Tuple t1, Tuple t2) {
@@ -56,6 +75,7 @@ public class SortOperator extends Operator{
             });
         }
 
+        // Return the next tuple from the sorted list
         if (currentTupleIndex < tuplesList.size()) {
             return tuplesList.get(currentTupleIndex++);
         }

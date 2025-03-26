@@ -8,6 +8,22 @@ import net.sf.jsqlparser.schema.Column;
 
 import java.util.List;
 
+/**
+ * The ExpressionEvaluator class is responsible for evaluating the expressions in the WHERE clause.
+ * It evaluates the expressions based on the tuple values and the schema of the table.
+ *
+ * The ExpressionEvaluator class contains the following methods:
+ * - getResult(): Returns the result of the evaluation.
+ * - getValue(): Returns the value of the evaluated expression.
+ * - evaluateComparison(): Evaluates the comparison expressions.
+ * - The other methods are overridden from the ExpressionVisitorAdapter class to visit different types of expressions.
+ *
+ * The ExpressionEvaluator class also contains the following instance variables:
+ * - tuple: The tuple containing the values of the table.
+ * - schema: The schema of the table.
+ * - result: The result of the evaluation.
+ * - value: The value of the evaluated expression.
+ */
 public class ExpressionEvaluator extends ExpressionVisitorAdapter {
     private final Tuple tuple;
     private final List<String> schema;
@@ -28,6 +44,7 @@ public class ExpressionEvaluator extends ExpressionVisitorAdapter {
         return value;
     }
 
+    // Recursively evaluate the left and right expressions of the AND expression
     @Override
     public void visit(AndExpression andExpr) {
         ExpressionEvaluator leftEval = new ExpressionEvaluator(tuple, schema);
@@ -69,6 +86,7 @@ public class ExpressionEvaluator extends ExpressionVisitorAdapter {
         evaluateComparison(minorThanEquals, "<=");
     }
 
+    // Evaluate the comparison expressions based on the operator
     private void evaluateComparison(BinaryExpression expr, String operator) {
         ExpressionEvaluator leftEval = new ExpressionEvaluator(tuple, schema);
         expr.getLeftExpression().accept(leftEval);

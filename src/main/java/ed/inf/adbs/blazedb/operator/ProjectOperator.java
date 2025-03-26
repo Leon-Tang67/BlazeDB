@@ -19,14 +19,38 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+/**
+ * The ProjectOperator class is responsible for projecting the columns specified in the SELECT clause.
+ * It takes a child operator as input and projects the specified columns from the child operator's output.
+ *
+ * The ProjectOperator class contains the following methods:
+ * - getNextTuple(): Retrieves the next tuple with the projected columns.
+ * - reset(): Resets the iterator to the start.
+ * - getTableName(): Returns the name of the table.
+ * - getTableSchema(): Returns the schema of the table.
+ *
+ * The ProjectOperator class also contains the following instance variables:
+ * - childOperator: The child operator of the ProjectOperator.
+ * - columnIndexes: A list of column indexes to be projected.
+ * - schema: The schema of the table.
+ */
+
 public class ProjectOperator extends Operator {
     private final Operator childOperator;
     private final List<Integer> columnIndexes;
     private final List<String> schema;
 
+    /**
+     * Initializes the ProjectOperator with the child operator and the SELECT clause.
+     * @param childOperator The child operator of the ProjectOperator.
+     * @param select The SELECT clause containing the columns to be projected.
+     * @throws IOException If an I/O error occurs.
+     */
     public ProjectOperator(Operator childOperator, PlainSelect select) throws IOException {
         this.childOperator = childOperator;
         this.schema = childOperator.getTableSchema();
+
+        // Extract the columns to be projected, group by columns, and order by columns for later use
         List<SelectItem<?>> selectedColumns = select.getSelectItems();
         ExpressionList groupByExpressionLists = null;
         if (select.getGroupBy() != null) {
@@ -38,6 +62,7 @@ public class ProjectOperator extends Operator {
         Set<String> columnNameSet = new HashSet<>();
         columnIndexes = new ArrayList<>();
 
+        // Add group by columns to the column indexes if there are any
         if (groupByExpressionLists != null) {
             for (Object column : groupByExpressionLists) {
                 Column groupByColumn = (Column) column;
@@ -49,6 +74,7 @@ public class ProjectOperator extends Operator {
             }
         }
 
+        // Add order by columns to the column indexes if there are any
         if (orderByElements != null) {
             for (OrderByElement column : orderByElements) {
                 Column orderByColumn = (Column) column.getExpression();
@@ -60,7 +86,15 @@ public class ProjectOperator extends Operator {
             }
         }
 
+        // Scan through the selected columns and add them to the column indexes based on different scenarios
         for (SelectItem<?> item : selectedColumns) {
+            // If the SELECT clause contains *, add all columns to the column indexes
+            //     One special case is there is a GROUP BY clause, then we don't need to add all the columns
+            //     as we know the columns indicated by * must be a subset of the group by columns
+            // If the select item is a column, add it to the column indexes. This is the normal projection case
+            //     even if there is a GROUP BY clause we still need to project these columns
+            // If the select item is a SUM function, add the column(s) contained in the function to the column
+            //     indexes for the SUM operator to use later in the calculation.
             if (item.getExpression() instanceof AllColumns) {
                 if (groupByExpressionLists != null) {
                     continue;
@@ -74,12 +108,13 @@ public class ProjectOperator extends Operator {
                     columnNameSet.add(columnFullName);
                     columnIndexes.add(schema.indexOf(columnFullName));
                 }
-            } else
-            if (item.toString().contains("SUM")) {
+            } else if (item.toString().contains("SUM")) {
                 if (!(item.getExpression() instanceof Function)) {
                     break;
                 }
 
+                // Recursively extract the column(s) contained in the SUM function to handle the case where
+                // there are multiple columns multiplied together
                 Function function = (Function) item.getExpression();
                 if (function.getParameters().get(0) instanceof Multiplication) {
                     Multiplication multiplication = (Multiplication) function.getParameters().get(0);
@@ -92,7 +127,6 @@ public class ProjectOperator extends Operator {
                                 columnIndexes.add(schema.indexOf(columnFullName));
                             }
                         }
-                        // TODO: add comments
                         if (multiplication.getLeftExpression() instanceof Column) {
                             Column column = (Column) multiplication.getLeftExpression();
                             String columnFullName = column.getFullyQualifiedName();
@@ -114,23 +148,16 @@ public class ProjectOperator extends Operator {
                         columnNameSet.add(columnFullName);
                         columnIndexes.add(schema.indexOf(columnFullName));
                     }
+                // If the SUM function is applied to a constant value, add only the first column to the column indexes
+                // for the calculation of line count. This can dramatically save tuple size to be stored in memory in
+                // this special case
                 } else if (function.getParameters().get(0) instanceof LongValue) {
-                    if (groupByExpressionLists != null) {
-                        for (Object column : groupByExpressionLists) {
-                            Column groupByColumn = (Column) column;
-                            String columnFullName = groupByColumn.getFullyQualifiedName();
-                            if (!columnNameSet.contains(columnFullName)) {
-                                columnNameSet.add(columnFullName);
-                                columnIndexes.add(schema.indexOf(columnFullName));
-                            }
-                        }
-                    } else {
+                    if (groupByExpressionLists == null) {
                         columnIndexes.add(0);
                     }
                 }
             }
         }
-
     }
 
     @Override
@@ -156,6 +183,11 @@ public class ProjectOperator extends Operator {
         return childOperator.getTableName();
     }
 
+    /**
+     * Returns the schema of the table after projection.
+     * The schema has changed to only include the columns that are projected.
+     * @return The schema of the table.
+     */
     @Override
     public List<String> getTableSchema() {
         List<String> projectedSchema = new ArrayList<>();

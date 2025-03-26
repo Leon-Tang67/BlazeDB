@@ -8,8 +8,22 @@ import net.sf.jsqlparser.statement.select.Select;
 
 import java.io.*;
 
-public class Interpreter {
+/**
+ * The Interpreter class is responsible for executing the query in the provided file
+ * and writing the result to the output file.
+ *
+ * The Interpreter class contains the following methods:
+ * - executeQuery(): Executes the query in the provided file and writes the result to the output file.
+ * - execute(): Executes the provided query plan by repeatedly calling `getNextTuple()`
+ */
 
+ public class Interpreter {
+    /**
+     * Executes the query in the provided file and call the execute method to write the result to the output file.
+     *
+     * @param queryFile The name of the file containing the query.
+     * @param outputFile The name of the file where the result will be written.
+     */
     public static void executeQuery(String queryFile, String outputFile) {
         try (BufferedReader reader = new BufferedReader(new FileReader(queryFile))) {
             String query = reader.readLine(); // Assume one query per file

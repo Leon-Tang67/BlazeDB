@@ -3,13 +3,6 @@ package ed.inf.adbs.blazedb.operator;
 import ed.inf.adbs.blazedb.DatabaseCatalog;
 import ed.inf.adbs.blazedb.Interpreter;
 import junit.framework.TestCase;
-import net.sf.jsqlparser.parser.CCJSqlParserUtil;
-import net.sf.jsqlparser.statement.Statement;
-import net.sf.jsqlparser.statement.select.PlainSelect;
-
-import java.io.FileReader;
-
-import ed.inf.adbs.blazedb.Interpreter;
 
 public class ScanOperatorTest extends TestCase {
 
