@@ -10,16 +10,16 @@ import java.util.Comparator;
 import java.util.List;
 
 public class SortOperator extends Operator{
-    private Operator childOperator;
-    private List<Integer> columnIndexes;
-    private List<String> schema;
-    private List<Tuple> tuples;
+    private final Operator childOperator;
+    private final List<Integer> columnIndexes;
+    private final List<String> schema;
+    private final List<Tuple> tuplesList;
     private int currentTupleIndex;
 
     public SortOperator(Operator childOperator, List<OrderByElement> orderByElements) {
         this.childOperator = childOperator;
         this.schema = childOperator.getTableSchema();
-        this.tuples = new ArrayList<>();
+        this.tuplesList = new ArrayList<>();
         this.currentTupleIndex = 0;
 
         // Convert column names to indexes
@@ -33,14 +33,14 @@ public class SortOperator extends Operator{
 
     @Override
     public Tuple getNextTuple() {
-        if (tuples.isEmpty()) {
+        if (tuplesList.isEmpty()) {
             Tuple tuple;
             while ((tuple = childOperator.getNextTuple()) != null) {
-                tuples.add(tuple);
+                tuplesList.add(tuple);
             }
 
             // Sort tuples
-            Collections.sort(tuples, new Comparator<Tuple>() {
+            Collections.sort(tuplesList, new Comparator<Tuple>() {
                 @Override
                 public int compare(Tuple t1, Tuple t2) {
                     for (int i = 0; i < columnIndexes.size(); i++) {
@@ -56,8 +56,8 @@ public class SortOperator extends Operator{
             });
         }
 
-        if (currentTupleIndex < tuples.size()) {
-            return tuples.get(currentTupleIndex++);
+        if (currentTupleIndex < tuplesList.size()) {
+            return tuplesList.get(currentTupleIndex++);
         }
         return null;
     }
@@ -65,7 +65,7 @@ public class SortOperator extends Operator{
     @Override
     public void reset() {
         childOperator.reset();
-        tuples.clear();
+        tuplesList.clear();
         currentTupleIndex = 0;
     }
 

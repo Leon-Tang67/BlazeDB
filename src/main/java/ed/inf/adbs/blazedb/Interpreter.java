@@ -29,6 +29,13 @@ public class Interpreter {
         }
     }
 
+    /**
+     * Executes the provided query plan by repeatedly calling `getNextTuple()`
+     * on the root object of the operator tree. Writes the result to `outputFile`.
+     *
+     * @param root The root operator of the operator tree (assumed to be non-null).
+     * @param outputFile The name of the file where the result will be written.
+     */
     private static void execute(Operator root, String outputFile) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))) {
             Tuple tuple;

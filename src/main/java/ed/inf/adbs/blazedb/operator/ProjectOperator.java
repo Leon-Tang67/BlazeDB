@@ -8,6 +8,7 @@ import net.sf.jsqlparser.expression.LongValue;
 import net.sf.jsqlparser.expression.operators.arithmetic.Multiplication;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
 import net.sf.jsqlparser.schema.Column;
+import net.sf.jsqlparser.statement.select.AllColumns;
 import net.sf.jsqlparser.statement.select.SelectItem;
 
 import java.io.IOException;
@@ -19,19 +20,22 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class ProjectOperator extends Operator {
-    private Operator childOperator;
-    private List<Integer> columnIndexes;
-    private List<String> schema;
+    private final Operator childOperator;
+    private final List<Integer> columnIndexes;
+    private final List<String> schema;
 
     public ProjectOperator(Operator childOperator, List<SelectItem<?>> selectedColumns, ExpressionList groupByColumns) throws IOException {
         this.childOperator = childOperator;
         this.schema = childOperator.getTableSchema();
 
         // Convert column names to indexes
-        columnIndexes = new ArrayList<>();
         Set<String> columnNameSet = new HashSet<>();
+        columnIndexes = new ArrayList<>();
+
         for (SelectItem<?> item : selectedColumns) {
-            if (item.getExpression() instanceof Column) {
+            if (item.getExpression() instanceof AllColumns) {
+                columnIndexes.addAll(IntStream.range(0, schema.size()).boxed().collect(Collectors.toList()));
+            } else if (item.getExpression() instanceof Column) {
                 Column column = (Column) item.getExpression();
                 String columnFullName = column.getFullyQualifiedName();
                 if (!columnNameSet.contains(columnFullName)) {
@@ -39,59 +43,70 @@ public class ProjectOperator extends Operator {
                     columnIndexes.add(schema.indexOf(columnFullName));
                 }
             } else if (item.toString().contains("SUM")) {
-                // TODO: toggle to the other side and break
-                if (item.getExpression() instanceof Function) {
-                    Function function = (Function) item.getExpression();
-                    if (function.getParameters().get(0) instanceof Multiplication) {
-                        Multiplication multiplication = (Multiplication) function.getParameters().get(0);
-                        while (true) {
-                            if (multiplication.getRightExpression() instanceof Column) {
-                                Column column = (Column) multiplication.getRightExpression();
-                                String columnFullName = column.getFullyQualifiedName();
-                                if (!columnNameSet.contains(columnFullName)) {
-                                    columnNameSet.add(columnFullName);
-                                    columnIndexes.add(schema.indexOf(columnFullName));
-                                }
-                            }
-                            // TODO: add comments
-                            if (multiplication.getLeftExpression() instanceof Column) {
-                                Column column = (Column) multiplication.getLeftExpression();
-                                String columnFullName = column.getFullyQualifiedName();
-                                if (!columnNameSet.contains(columnFullName)) {
-                                    columnNameSet.add(columnFullName);
-                                    columnIndexes.add(schema.indexOf(columnFullName));
-                                }
-                                break;
-                            } else if (multiplication.getLeftExpression() instanceof LongValue) {
-                                break;
-                            } else if (multiplication.getLeftExpression() instanceof Multiplication) {
-                                multiplication = (Multiplication) multiplication.getLeftExpression();
+                if (!(item.getExpression() instanceof Function)) {
+                    break;
+                }
+
+                Function function = (Function) item.getExpression();
+                if (function.getParameters().get(0) instanceof Multiplication) {
+                    Multiplication multiplication = (Multiplication) function.getParameters().get(0);
+                    while (true) {
+                        if (multiplication.getRightExpression() instanceof Column) {
+                            Column column = (Column) multiplication.getRightExpression();
+                            String columnFullName = column.getFullyQualifiedName();
+                            if (!columnNameSet.contains(columnFullName)) {
+                                columnNameSet.add(columnFullName);
+                                columnIndexes.add(schema.indexOf(columnFullName));
                             }
                         }
-                    } else if (function.getParameters().get(0) instanceof Column) {
-                        Column column = (Column) function.getParameters().get(0);
-                        String columnFullName = column.getFullyQualifiedName();
-                        if (!columnNameSet.contains(columnFullName)) {
-                            columnNameSet.add(columnFullName);
-                            columnIndexes.add(schema.indexOf(columnFullName));
+                        // TODO: add comments
+                        if (multiplication.getLeftExpression() instanceof Column) {
+                            Column column = (Column) multiplication.getLeftExpression();
+                            String columnFullName = column.getFullyQualifiedName();
+                            if (!columnNameSet.contains(columnFullName)) {
+                                columnNameSet.add(columnFullName);
+                                columnIndexes.add(schema.indexOf(columnFullName));
+                            }
+                            break;
+                        } else if (multiplication.getLeftExpression() instanceof LongValue) {
+                            break;
+                        } else if (multiplication.getLeftExpression() instanceof Multiplication) {
+                            multiplication = (Multiplication) multiplication.getLeftExpression();
                         }
-                    } else if (function.getParameters().get(0) instanceof LongValue) {
-                        columnIndexes.addAll(IntStream.range(0, schema.size()).boxed().collect(Collectors.toList()));
+                    }
+                } else if (function.getParameters().get(0) instanceof Column) {
+                    Column column = (Column) function.getParameters().get(0);
+                    String columnFullName = column.getFullyQualifiedName();
+                    if (!columnNameSet.contains(columnFullName)) {
+                        columnNameSet.add(columnFullName);
+                        columnIndexes.add(schema.indexOf(columnFullName));
+                    }
+                } else if (function.getParameters().get(0) instanceof LongValue) {
+                    if (groupByColumns != null) {
+                        for (Object column : groupByColumns) {
+                            Column groupByColumn = (Column) column;
+                            String columnFullName = groupByColumn.getFullyQualifiedName();
+                            if (!columnNameSet.contains(columnFullName)) {
+                                columnNameSet.add(columnFullName);
+                                columnIndexes.add(schema.indexOf(columnFullName));
+                            }
+                        }
+                    } else {
+                        columnIndexes.add(0);
                     }
                 }
             }
         }
         if (!selectedColumns.toString().contains("SUM") && groupByColumns != null) {
-            for (Object expression : groupByColumns) {
-                Column column = (Column) expression;
-                String columnFullName = column.getFullyQualifiedName();
+            for (Object column : groupByColumns) {
+                Column groupByColumn = (Column) column;
+                String columnFullName = groupByColumn.getFullyQualifiedName();
                 if (!columnNameSet.contains(columnFullName)) {
                     columnNameSet.add(columnFullName);
                     columnIndexes.add(schema.indexOf(columnFullName));
                 }
             }
         }
-
     }
 
     @Override
@@ -119,7 +134,6 @@ public class ProjectOperator extends Operator {
 
     @Override
     public List<String> getTableSchema() {
-        List<String> schema = childOperator.getTableSchema();
         List<String> projectedSchema = new ArrayList<>();
         for (int index : columnIndexes) {
             projectedSchema.add(schema.get(index));

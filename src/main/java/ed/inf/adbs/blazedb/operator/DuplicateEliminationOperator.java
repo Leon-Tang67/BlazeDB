@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Set;
 
 public class DuplicateEliminationOperator extends Operator{
-    private Operator childOperator;
+    private final Operator childOperator;
     private Set<Tuple> tupleSet;
 
     public DuplicateEliminationOperator(Operator childOperator) {

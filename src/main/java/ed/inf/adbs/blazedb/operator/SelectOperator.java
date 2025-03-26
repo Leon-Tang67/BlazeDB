@@ -8,9 +8,9 @@ import java.io.IOException;
 import java.util.List;
 
 public class SelectOperator extends Operator {
-    private Operator childOperator;
-    private Expression selectionCondition;
-    private List<String> schema;
+    private final Operator childOperator;
+    private final Expression selectionCondition;
+    private final List<String> schema;
 
     public SelectOperator(Operator childOperator, Expression selectionCondition) throws IOException {
         this.childOperator = childOperator;

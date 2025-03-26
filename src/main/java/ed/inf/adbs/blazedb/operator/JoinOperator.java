@@ -9,10 +9,10 @@ import java.util.List;
 import java.util.ArrayList;
 
 public class JoinOperator extends Operator {
-    private Operator leftChild;
-    private Operator rightChild;
-    private Expression joinCondition;
-    private List<String> schema;
+    private final Operator leftChild;
+    private final Operator rightChild;
+    private final Expression joinCondition;
+    private final List<String> schema;
     private Tuple leftTuple;
 
     public JoinOperator(Operator leftChild, Operator rightChild, Expression joinCondition) throws IOException {

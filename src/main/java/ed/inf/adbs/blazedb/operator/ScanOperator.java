@@ -9,9 +9,9 @@ import java.util.List;
 
 public class ScanOperator extends Operator {
     private BufferedReader reader;
-    private String tableName;
-    private String tableFilePath;
-    private List<String> tableSchema;
+    private final String tableName;
+    private final String tableFilePath;
+    private final List<String> tableSchema;
 
     public ScanOperator(String tableName) throws IOException {
         this.tableName = tableName;
@@ -23,7 +23,6 @@ public class ScanOperator extends Operator {
     @Override
     public Tuple getNextTuple() {
         try {
-            // TODO: Handle empty tables
             String line = reader.readLine();
             if (line == null) return null;
 

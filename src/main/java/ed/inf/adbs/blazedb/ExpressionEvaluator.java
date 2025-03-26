@@ -9,8 +9,8 @@ import net.sf.jsqlparser.schema.Column;
 import java.util.List;
 
 public class ExpressionEvaluator extends ExpressionVisitorAdapter {
-    private Tuple tuple;
-    private List<String> schema;
+    private final Tuple tuple;
+    private final List<String> schema;
     private boolean result;
     private int value;
 
@@ -130,29 +130,18 @@ public class ExpressionEvaluator extends ExpressionVisitorAdapter {
 //    @Override
 //    public void visit(Function function) {
 //        if (function.getName().equalsIgnoreCase("SUM")) {
-//            if (function.getParameters() != null && function.getParameters().getExpressions().size() == 1) {
-//                Expression param = function.getParameters().getExpressions().get(0);
-//                param.accept(new ExpressionVisitorAdapter() {
-//                    @Override
-//                    public void visit(Column column) {
-//                        // Handle the column (e.g., Enrolled.H)
-//                    }
-//
-//                    @Override
-//                    public void visit(BinaryExpression binaryExpression) {
-//                        // Handle binary expressions (e.g., Enrolled.H * Enrolled.H)
-//                        binaryExpression.getLeftExpression().accept(this);
-//                        binaryExpression.getRightExpression().accept(this);
-//                    }
-//                });
-//            } else {
-//                throw new RuntimeException("SUM function must have exactly one parameter.");
+//            if (function.getParameters() != null && !function.getParameters().isEmpty()) {
+//                int sum = 0;
+//                for (Object param : function.getParameters()) {
+//                    Expression paramExpr = (Expression) param;
+//                    ExpressionEvaluator paramEvaluator = new ExpressionEvaluator(tuple, schema);
+//                    paramExpr.accept(paramEvaluator);
+//                    sum += paramEvaluator.getValue();
+//                }
+//                value = sum;
 //            }
 //        } else {
 //            throw new RuntimeException("Unsupported function: " + function.getName());
 //        }
 //    }
-
-//    @Override
-//    public void visit(NullValue nullValue) {}
 }

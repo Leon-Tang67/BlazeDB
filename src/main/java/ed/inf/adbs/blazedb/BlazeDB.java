@@ -1,17 +1,9 @@
 package ed.inf.adbs.blazedb;
 
-import java.io.*;
-
-import ed.inf.adbs.blazedb.operator.ScanOperator;
-//import ed.inf.adbs.blazedb.operator.SelectOperator;
-import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.Function;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.PlainSelect;
-import net.sf.jsqlparser.statement.select.Select;
-import ed.inf.adbs.blazedb.operator.Operator;
-//import ed.inf.adbs.blazedb.ExpressionEvaluator;
 
 /**
  * Lightweight in-memory database system.
@@ -24,71 +16,26 @@ public class BlazeDB {
 
 	public static void main(String[] args) {
 
-//		if (args.length != 3) {
-//			System.err.println("Usage: BlazeDB database_dir input_file output_file");
-//			return;
-//		}
-//
-//		String databaseDir = args[0];
-//		String inputFile = args[1];
-//		String outputFile = args[2];
-
-//		String databaseDir = "samples/db";
-//		String inputFile = "samples/input/query4.sql";
-//		String outputFile = "samples/output/query4.csv";
-//
-//		try {
-//			// Initialize DatabaseCatalog
-//			DatabaseCatalog.getInstance(databaseDir);
-//
-//			// Parse query using JSQLParser
-//			Statement statement = CCJSqlParserUtil.parse(new FileReader(inputFile));
-//			if (statement != null) {
-//				PlainSelect select = (PlainSelect) statement;
-//				String tableName = select.getFromItem().toString();
-//				Expression expression = select.getWhere();
-//
-//				// Execute query using ScanOperator
-//				ScanOperator scanOperator = new ScanOperator(tableName);
-//				SelectOperator selectOperator = new SelectOperator(scanOperator, expression);
-//				execute(selectOperator, outputFile);
-//			} else {
-//				System.out.println("Unsupported query type.");
-//			}
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
-
-		parsingExample("inputFile");
-	}
-
-
-	/**
-	 * Executes the provided query plan by repeatedly calling `getNextTuple()`
-	 * on the root object of the operator tree. Writes the result to `outputFile`.
-	 *
-	 * @param root The root operator of the operator tree (assumed to be non-null).
-	 * @param outputFile The name of the file where the result will be written.
-	 */
-	public static void execute(Operator root, String outputFile) {
-		try {
-			// Create a BufferedWriter
-			BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile));
-
-			// Iterate over the tuples produced by root
-			Tuple tuple = root.getNextTuple();
-			while (tuple != null) {
-				writer.write(tuple.toString());
-				writer.newLine();
-				tuple = root.getNextTuple();
-			}
-
-			// Close the writer
-			writer.close();
+		if (args.length != 3) {
+			System.err.println("Usage: BlazeDB database_dir input_file output_file");
+			return;
 		}
-		catch (IOException e) {
+
+		String databaseDir = args[0];
+		String inputFile = args[1];
+		String outputFile = args[2];
+
+		try {
+			// Initialize DatabaseCatalog
+			DatabaseCatalog.getInstance(databaseDir);
+
+			// Execute query from input file
+			Interpreter.executeQuery(inputFile, outputFile);
+
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
+
 	}
 
 
@@ -159,4 +106,3 @@ public class BlazeDB {
 		}
 	}
 }
-//((Multiplication) ((Function) select.getSelectItems().get(1).getExpression()).getParameters().get(0)).getLeftExpression()

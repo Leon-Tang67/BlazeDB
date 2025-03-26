@@ -8,13 +8,12 @@ import net.sf.jsqlparser.statement.select.PlainSelect;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.stream.IntStream;
 
 public class QueryPlanner {
-    private PlainSelect select;
-    private Map<String, Operator> tableScans;
-    private List<Expression> joinConditions;
-    private Map<String, Expression> selectionConditions;
+    private final PlainSelect select;
+    private final Map<String, Operator> tableScans;
+    private final List<Expression> joinConditions;
+    private final Map<String, Expression> selectionConditions;
 
     public QueryPlanner(PlainSelect select) {
         this.select = select;
@@ -56,8 +55,8 @@ public class QueryPlanner {
             root = new JoinOperator(root, right, joinCondition);
         }
 
-        // TODO: solve the case where there is a combination of * and SUM
-        if (!(select.getSelectItems().get(0).getExpression() instanceof AllColumns)) {
+        if (!(select.getSelectItems().get(0).getExpression() instanceof AllColumns) ||
+                select.getSelectItems().stream().anyMatch(item -> item.toString().contains("SUM"))) {
             if (select.getGroupBy() != null) {
                 root = new ProjectOperator(root, select.getSelectItems(), select.getGroupBy().getGroupByExpressionList());
             } else {

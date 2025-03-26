@@ -1,7 +1,11 @@
-SELECT Student.B, Student.C, SUM(1), SUM(Student.A) FROM Student, Enrolled GROUP BY Student.B, Student.C;
+SELECT Student.A, Student.B, SUM(Enrolled.H * Student.C) FROM Student, Enrolled ,Course WHERE Student.A = Enrolled.A AND Enrolled.E = Course.E AND Student.C > 50 AND Enrolled.H > 50 AND Course.F < 8 GROUP BY Student.A, Student.B;
+-- SELECT Enrolled.E, SUM(Enrolled.H * Enrolled.H) FROM Enrolled GROUP BY Enrolled.E ORDER BY Enrolled.E;
+-- SELECT SUM(1), SUM(Student.A) FROM Student WHERE 1 = 2 GROUP BY Student.A;
+-- SELECT * FROM Student GROUP BY Student.A, Student.B, Student.C, Student.D;
+-- SELECT Student.B, Student.C, SUM(1), SUM(Student.A) FROM Student, Enrolled GROUP BY Student.B, Student.C;
+-- SELECT Student.B, Student.C FROM Student, Enrolled WHERE Student.A = Enrolled.A GROUP BY Student.B, Student.C ORDER BY Student.C, Student.B;
 -- SELECT Student.B FROM Student, Enrolled WHERE Student.A = Enrolled.A GROUP BY Student.B, Student.C ORDER BY Student.B;
 -- SELECT Enrolled.E, SUM(2 * Enrolled.H * Enrolled.E), SUM(Enrolled.F) FROM Enrolled GROUP BY Enrolled.E, Enrolled.H;
--- SELECT Student.B, Student.C FROM Student, Enrolled WHERE Student.A = Enrolled.A GROUP BY Student.B, Student.C ORDER BY Student.C, Student.B;
 -- SELECT SUM(1), SUM(Student.A) FROM Student, Enrolled;
 -- SELECT SUM(1) FROM Student GROUP BY Student.B;
 -- SELECT Enrolled.E, SUM(2 * Enrolled.H * Enrolled.E) FROM Enrolled GROUP BY Enrolled.E;

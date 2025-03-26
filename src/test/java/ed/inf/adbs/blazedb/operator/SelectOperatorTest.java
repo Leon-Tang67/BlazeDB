@@ -1,6 +1,7 @@
 package ed.inf.adbs.blazedb.operator;
 
 import ed.inf.adbs.blazedb.DatabaseCatalog;
+import ed.inf.adbs.blazedb.Interpreter;
 import junit.framework.TestCase;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
@@ -8,8 +9,6 @@ import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 
 import java.io.FileReader;
-
-import static ed.inf.adbs.blazedb.BlazeDB.execute;
 
 public class SelectOperatorTest extends TestCase {
 
@@ -23,19 +22,8 @@ public class SelectOperatorTest extends TestCase {
             DatabaseCatalog.getInstance(databaseDir);
 
             // Parse query using JSQLParser
-            Statement statement = CCJSqlParserUtil.parse(new FileReader(inputFile));
-            if (statement != null) {
-                PlainSelect select = (PlainSelect) statement;
-                String tableName = select.getFromItem().toString();
-                Expression expression = select.getWhere();
+            Interpreter.executeQuery(inputFile, outputFile);
 
-                // Execute query using ScanOperator
-                ScanOperator scanOperator = new ScanOperator(tableName);
-                SelectOperator selectOperator = new SelectOperator(scanOperator, expression);
-                execute(selectOperator, outputFile);
-            } else {
-                System.out.println("Unsupported query type.");
-            }
         } catch (Exception e) {
             e.printStackTrace();
         }

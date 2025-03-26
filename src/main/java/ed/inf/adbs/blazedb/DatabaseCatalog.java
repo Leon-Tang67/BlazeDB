@@ -8,8 +8,8 @@ import java.util.*;
 
 public class DatabaseCatalog {
     private static DatabaseCatalog instance;
-    private Map<String, String> tableFileMap; // Maps table names to file paths
-    private Map<String, List<String>> tableSchemaMap; // Maps table names to their schemas
+    private final Map<String, String> tableFileMap; // Maps table names to file paths
+    private final Map<String, List<String>> tableSchemaMap; // Maps table names to their schemas
 
     private DatabaseCatalog(String databaseDir) throws IOException {
         tableFileMap = new HashMap<>();
