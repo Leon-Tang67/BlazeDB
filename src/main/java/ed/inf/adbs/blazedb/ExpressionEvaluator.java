@@ -126,22 +126,4 @@ public class ExpressionEvaluator extends ExpressionVisitorAdapter {
 
         value = leftEval.value * rightEval.value;
     }
-
-//    @Override
-//    public void visit(Function function) {
-//        if (function.getName().equalsIgnoreCase("SUM")) {
-//            if (function.getParameters() != null && !function.getParameters().isEmpty()) {
-//                int sum = 0;
-//                for (Object param : function.getParameters()) {
-//                    Expression paramExpr = (Expression) param;
-//                    ExpressionEvaluator paramEvaluator = new ExpressionEvaluator(tuple, schema);
-//                    paramExpr.accept(paramEvaluator);
-//                    sum += paramEvaluator.getValue();
-//                }
-//                value = sum;
-//            }
-//        } else {
-//            throw new RuntimeException("Unsupported function: " + function.getName());
-//        }
-//    }
 }

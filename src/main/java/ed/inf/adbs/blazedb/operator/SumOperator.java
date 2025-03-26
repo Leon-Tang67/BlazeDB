@@ -126,11 +126,12 @@ public class SumOperator extends Operator {
 
     @Override
     public List<String> getTableSchema() {
-        List<String> schema = new ArrayList<>();
+        List<String> schema = new ArrayList<>(this.schema);
         for (SelectItem<?> item : selectedColumns) {
-            if (item.getExpression() instanceof Column) {
-                schema.add(((Column) item.getExpression()).getFullyQualifiedName());
-            } else if (item.toString().contains("SUM")) {
+//            if (item.getExpression() instanceof Column) {
+//                schema.add(((Column) item.getExpression()).getFullyQualifiedName());
+//            } else
+            if (item.toString().contains("SUM")) {
                 schema.add(item.toString());
             }
         }

@@ -57,11 +57,7 @@ public class QueryPlanner {
 
         if (!(select.getSelectItems().get(0).getExpression() instanceof AllColumns) ||
                 select.getSelectItems().stream().anyMatch(item -> item.toString().contains("SUM"))) {
-            if (select.getGroupBy() != null) {
-                root = new ProjectOperator(root, select.getSelectItems(), select.getGroupBy().getGroupByExpressionList());
-            } else {
-                root = new ProjectOperator(root, select.getSelectItems(), null);
-            }
+            root = new ProjectOperator(root, select);
         }
 
         if (select.getSelectItems().stream().anyMatch(item -> item.toString().contains("SUM")) || select.getGroupBy() != null) {

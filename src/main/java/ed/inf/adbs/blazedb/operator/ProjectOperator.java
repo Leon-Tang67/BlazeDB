@@ -1,14 +1,14 @@
 package ed.inf.adbs.blazedb.operator;
 
-import ed.inf.adbs.blazedb.ExpressionEvaluator;
 import ed.inf.adbs.blazedb.Tuple;
-import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.Function;
 import net.sf.jsqlparser.expression.LongValue;
 import net.sf.jsqlparser.expression.operators.arithmetic.Multiplication;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.AllColumns;
+import net.sf.jsqlparser.statement.select.OrderByElement;
+import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.SelectItem;
 
 import java.io.IOException;
@@ -24,16 +24,48 @@ public class ProjectOperator extends Operator {
     private final List<Integer> columnIndexes;
     private final List<String> schema;
 
-    public ProjectOperator(Operator childOperator, List<SelectItem<?>> selectedColumns, ExpressionList groupByColumns) throws IOException {
+    public ProjectOperator(Operator childOperator, PlainSelect select) throws IOException {
         this.childOperator = childOperator;
         this.schema = childOperator.getTableSchema();
+        List<SelectItem<?>> selectedColumns = select.getSelectItems();
+        ExpressionList groupByExpressionLists = null;
+        if (select.getGroupBy() != null) {
+            groupByExpressionLists = select.getGroupBy().getGroupByExpressionList();
+        }
+        List<OrderByElement> orderByElements = select.getOrderByElements();
 
         // Convert column names to indexes
         Set<String> columnNameSet = new HashSet<>();
         columnIndexes = new ArrayList<>();
 
+        if (groupByExpressionLists != null) {
+            for (Object column : groupByExpressionLists) {
+                Column groupByColumn = (Column) column;
+                String columnFullName = groupByColumn.getFullyQualifiedName();
+                if (!columnNameSet.contains(columnFullName)) {
+                    columnNameSet.add(columnFullName);
+                    columnIndexes.add(schema.indexOf(columnFullName));
+                }
+            }
+        }
+
+        if (orderByElements != null) {
+            for (OrderByElement column : orderByElements) {
+                Column orderByColumn = (Column) column.getExpression();
+                String columnFullName = orderByColumn.getFullyQualifiedName();
+                if (!columnNameSet.contains(columnFullName)) {
+                    columnNameSet.add(columnFullName);
+                    columnIndexes.add(schema.indexOf(columnFullName));
+                }
+            }
+        }
+
         for (SelectItem<?> item : selectedColumns) {
             if (item.getExpression() instanceof AllColumns) {
+                if (groupByExpressionLists != null) {
+                    continue;
+                }
+                columnNameSet.addAll(schema);
                 columnIndexes.addAll(IntStream.range(0, schema.size()).boxed().collect(Collectors.toList()));
             } else if (item.getExpression() instanceof Column) {
                 Column column = (Column) item.getExpression();
@@ -42,7 +74,8 @@ public class ProjectOperator extends Operator {
                     columnNameSet.add(columnFullName);
                     columnIndexes.add(schema.indexOf(columnFullName));
                 }
-            } else if (item.toString().contains("SUM")) {
+            } else
+            if (item.toString().contains("SUM")) {
                 if (!(item.getExpression() instanceof Function)) {
                     break;
                 }
@@ -82,8 +115,8 @@ public class ProjectOperator extends Operator {
                         columnIndexes.add(schema.indexOf(columnFullName));
                     }
                 } else if (function.getParameters().get(0) instanceof LongValue) {
-                    if (groupByColumns != null) {
-                        for (Object column : groupByColumns) {
+                    if (groupByExpressionLists != null) {
+                        for (Object column : groupByExpressionLists) {
                             Column groupByColumn = (Column) column;
                             String columnFullName = groupByColumn.getFullyQualifiedName();
                             if (!columnNameSet.contains(columnFullName)) {
@@ -97,16 +130,7 @@ public class ProjectOperator extends Operator {
                 }
             }
         }
-        if (!selectedColumns.toString().contains("SUM") && groupByColumns != null) {
-            for (Object column : groupByColumns) {
-                Column groupByColumn = (Column) column;
-                String columnFullName = groupByColumn.getFullyQualifiedName();
-                if (!columnNameSet.contains(columnFullName)) {
-                    columnNameSet.add(columnFullName);
-                    columnIndexes.add(schema.indexOf(columnFullName));
-                }
-            }
-        }
+
     }
 
     @Override

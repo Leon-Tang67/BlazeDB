@@ -18,8 +18,8 @@ import java.util.List;
 public class SumOperatorTest extends TestCase {
 
     public void testSumOperator() {
-        singleTestSumOperator();
-//        multiTestSumOperator();
+//        singleTestSumOperator();
+        multiTestSumOperator();
     }
 
     public void multiTestSumOperator() {

@@ -13,3 +13,7 @@ SELECT SUM(1), SUM(Student.A) FROM Student, Enrolled;
 SELECT * FROM Student, Enrolled, Course WHERE Student.A = Enrolled.A AND Enrolled.E = Course.E;
 SELECT DISTINCT Student.A, Enrolled.A FROM Student, Enrolled WHERE Student.A = Enrolled.A;
 SELECT Student.B, Student.C, SUM(1), SUM(Student.A) FROM Student, Enrolled GROUP BY Student.B, Student.C ORDER BY Student.C;
+SELECT *, SUM(1) FROM Student, Enrolled GROUP BY Student.B, Student.C ORDER BY Student.C;
+SELECT Student.A, Student.B, SUM(Enrolled.H * Student.C) FROM Student, Enrolled ,Course WHERE Student.A = Enrolled.A AND Enrolled.E = Course.E AND Student.C > 50 AND Enrolled.H > 50 AND Course.F < 8 GROUP BY Student.A, Student.B;
+SELECT Student.B, SUM(Enrolled.H * Student.C) FROM Student, Enrolled ,Course WHERE Student.A = Enrolled.A AND Enrolled.E = Course.E AND Student.C > 50 AND Enrolled.H > 50 AND Course.F < 8 GROUP BY Student.A, Student.B;
+SELECT *, SUM(1) FROM Student, Enrolled GROUP BY Student.B, Student.C ORDER BY Student.A;
