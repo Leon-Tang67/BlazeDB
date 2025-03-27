@@ -22,16 +22,16 @@ import java.util.stream.IntStream;
 /**
  * The ProjectOperator class is responsible for projecting the columns specified in the SELECT clause.
  * It takes a child operator as input and projects the specified columns from the child operator's output.
- *
- * The ProjectOperator class contains the following methods:
- * - getNextTuple(): Retrieves the next tuple with the projected columns.
- * - reset(): Resets the iterator to the start.
- * - getTableName(): Returns the name of the table.
+ * <br><br>
+ * The ProjectOperator class contains the following methods:<br>
+ * - getNextTuple(): Retrieves the next tuple with the projected columns.<br>
+ * - reset(): Resets the iterator to the start.<br>
+ * - getTableName(): Returns the name of the table.<br>
  * - getTableSchema(): Returns the schema of the table.
- *
- * The ProjectOperator class also contains the following instance variables:
- * - childOperator: The child operator of the ProjectOperator.
- * - columnIndexes: A list of column indexes to be projected.
+ * <br><br>
+ * The ProjectOperator class also contains the following instance variables:<br>
+ * - childOperator: The child operator of the ProjectOperator.<br>
+ * - columnIndexes: A list of column indexes to be projected.<br>
  * - schema: The schema of the table.
  */
 
@@ -49,20 +49,26 @@ public class ProjectOperator extends Operator {
     public ProjectOperator(Operator childOperator, PlainSelect select) throws IOException {
         this.childOperator = childOperator;
         this.schema = childOperator.getTableSchema();
+        this.columnIndexes = new ArrayList<>();
 
         // Extract the columns to be projected, group by columns, and order by columns for later use
         List<SelectItem<?>> selectedColumns = select.getSelectItems();
-        ExpressionList groupByExpressionLists = null;
-        if (select.getGroupBy() != null) {
-            groupByExpressionLists = select.getGroupBy().getGroupByExpressionList();
-        }
+        ExpressionList groupByExpressionLists = select.getGroupBy() != null ? select.getGroupBy().getGroupByExpressionList() : null;
         List<OrderByElement> orderByElements = select.getOrderByElements();
 
-        // Convert column names to indexes
         Set<String> columnNameSet = new HashSet<>();
-        columnIndexes = new ArrayList<>();
 
-        // Add group by columns to the column indexes if there are any
+        addGroupByColumns(groupByExpressionLists, columnNameSet);
+        addOrderByColumns(orderByElements, columnNameSet);
+        addSelectedColumns(selectedColumns, groupByExpressionLists, columnNameSet);
+    }
+
+    /**
+     * Add group by columns to the column indexes if there are any.
+     * @param groupByExpressionLists The group by columns.
+     * @param columnNameSet The set of column names.
+     */
+    private void addGroupByColumns(ExpressionList groupByExpressionLists, Set<String> columnNameSet) {
         if (groupByExpressionLists != null) {
             for (Object column : groupByExpressionLists) {
                 Column groupByColumn = (Column) column;
@@ -73,8 +79,14 @@ public class ProjectOperator extends Operator {
                 }
             }
         }
+    }
 
-        // Add order by columns to the column indexes if there are any
+    /**
+     * Add order by columns to the column indexes if there are any.
+     * @param orderByElements The order by columns.
+     * @param columnNameSet The set of column names.
+     */
+    private void addOrderByColumns(List<OrderByElement> orderByElements, Set<String> columnNameSet) {
         if (orderByElements != null) {
             for (OrderByElement column : orderByElements) {
                 Column orderByColumn = (Column) column.getExpression();
@@ -85,16 +97,25 @@ public class ProjectOperator extends Operator {
                 }
             }
         }
+    }
 
-        // Scan through the selected columns and add them to the column indexes based on different scenarios
+    /**
+     * Add selected columns to the column indexes based on different scenarios.
+     * @param selectedColumns The selected columns.
+     * @param groupByExpressionLists The group by columns.
+     * @param columnNameSet The set of column names.
+     *
+     * @Description
+     * If the SELECT clause contains *, add all columns to the column indexes.
+     *   One special case is when there is a GROUP BY clause, then we don't need to add all the columns
+     *   as we know the columns indicated by * must be a subset of the group by columns.<br>
+     * If the select item is a column, add it to the column indexes. This is the normal projection case
+     *   even if there is a GROUP BY clause we still need to project these columns.<br>
+     * If the select item is a SUM function, add the column(s) contained in the function to the column
+     *   indexes for the SUM operator to use later in the calculation.
+     */
+    private void addSelectedColumns(List<SelectItem<?>> selectedColumns, ExpressionList groupByExpressionLists, Set<String> columnNameSet) {
         for (SelectItem<?> item : selectedColumns) {
-            // If the SELECT clause contains *, add all columns to the column indexes
-            //     One special case is there is a GROUP BY clause, then we don't need to add all the columns
-            //     as we know the columns indicated by * must be a subset of the group by columns
-            // If the select item is a column, add it to the column indexes. This is the normal projection case
-            //     even if there is a GROUP BY clause we still need to project these columns
-            // If the select item is a SUM function, add the column(s) contained in the function to the column
-            //     indexes for the SUM operator to use later in the calculation.
             if (item.getExpression() instanceof AllColumns) {
                 if (groupByExpressionLists != null) {
                     continue;
@@ -109,53 +130,67 @@ public class ProjectOperator extends Operator {
                     columnIndexes.add(schema.indexOf(columnFullName));
                 }
             } else if (item.toString().contains("SUM")) {
-                if (!(item.getExpression() instanceof Function)) {
-                    break;
-                }
+                addSumFunctionColumns(item, groupByExpressionLists, columnNameSet);
+            }
+        }
+    }
 
-                // Recursively extract the column(s) contained in the SUM function to handle the case where
-                // there are multiple columns multiplied together
-                Function function = (Function) item.getExpression();
-                if (function.getParameters().get(0) instanceof Multiplication) {
-                    Multiplication multiplication = (Multiplication) function.getParameters().get(0);
-                    while (true) {
-                        if (multiplication.getRightExpression() instanceof Column) {
-                            Column column = (Column) multiplication.getRightExpression();
-                            String columnFullName = column.getFullyQualifiedName();
-                            if (!columnNameSet.contains(columnFullName)) {
-                                columnNameSet.add(columnFullName);
-                                columnIndexes.add(schema.indexOf(columnFullName));
-                            }
-                        }
-                        if (multiplication.getLeftExpression() instanceof Column) {
-                            Column column = (Column) multiplication.getLeftExpression();
-                            String columnFullName = column.getFullyQualifiedName();
-                            if (!columnNameSet.contains(columnFullName)) {
-                                columnNameSet.add(columnFullName);
-                                columnIndexes.add(schema.indexOf(columnFullName));
-                            }
-                            break;
-                        } else if (multiplication.getLeftExpression() instanceof LongValue) {
-                            break;
-                        } else if (multiplication.getLeftExpression() instanceof Multiplication) {
-                            multiplication = (Multiplication) multiplication.getLeftExpression();
-                        }
-                    }
-                } else if (function.getParameters().get(0) instanceof Column) {
-                    Column column = (Column) function.getParameters().get(0);
+    /**
+     * Extract the column(s) contained in the SUM function and add them to the column indexes.
+     * @param item The select item.
+     * @param groupByExpressionLists The group by columns.
+     * @param columnNameSet The set of column names.
+     *
+     * @Description
+     * If the function is a multiplication, recursively extract the column(s) contained in the SUM function
+     * until all the column(s) are found.<br>
+     * If the function is a column, add it to the column indexes.<br>
+     * If the SUM function is applied to a constant value, add only the first column to the column indexes
+     * for the calculation of line count. This can dramatically save tuple size to be stored in memory in
+     * this special case.
+     */
+    private void addSumFunctionColumns(SelectItem<?> item, ExpressionList groupByExpressionLists, Set<String> columnNameSet) {
+        if (!(item.getExpression() instanceof Function)) {
+            return;
+        }
+
+        Function function = (Function) item.getExpression();
+        if (function.getParameters().get(0) instanceof Multiplication) {
+            Multiplication multiplication = (Multiplication) function.getParameters().get(0);
+            while (true) {
+                // TODO: check if long value is in the middle of the multiplication and at the back case
+                if (multiplication.getRightExpression() instanceof Column) {
+                    Column column = (Column) multiplication.getRightExpression();
                     String columnFullName = column.getFullyQualifiedName();
                     if (!columnNameSet.contains(columnFullName)) {
                         columnNameSet.add(columnFullName);
                         columnIndexes.add(schema.indexOf(columnFullName));
                     }
-                // If the SUM function is applied to a constant value, add only the first column to the column indexes
-                // for the calculation of line count. This can dramatically save tuple size to be stored in memory in
-                // this special case
-                } else if (function.getParameters().get(0) instanceof LongValue) {
-                    if (groupByExpressionLists == null) {
-                        columnIndexes.add(0);
-                    }
                 }
+                if (multiplication.getLeftExpression() instanceof Column) {
+                    Column column = (Column) multiplication.getLeftExpression();
+                    String columnFullName = column.getFullyQualifiedName();
+                    if (!columnNameSet.contains(columnFullName)) {
+                        columnNameSet.add(columnFullName);
+                        columnIndexes.add(schema.indexOf(columnFullName));
+                    }
+                    break;
+                } else if (multiplication.getLeftExpression() instanceof LongValue) {
+                    break;
+                } else if (multiplication.getLeftExpression() instanceof Multiplication) {
+                    multiplication = (Multiplication) multiplication.getLeftExpression();
+                }
+            }
+        } else if (function.getParameters().get(0) instanceof Column) {
+            Column column = (Column) function.getParameters().get(0);
+            String columnFullName = column.getFullyQualifiedName();
+            if (!columnNameSet.contains(columnFullName)) {
+                columnNameSet.add(columnFullName);
+                columnIndexes.add(schema.indexOf(columnFullName));
+            }
+        } else if (function.getParameters().get(0) instanceof LongValue) {
+            if (groupByExpressionLists == null) {
+                columnIndexes.add(0);
             }
         }
     }

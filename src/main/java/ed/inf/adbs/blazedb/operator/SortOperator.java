@@ -12,18 +12,18 @@ import java.util.List;
 /**
  * The SortOperator class is responsible for sorting the tuples based on the ORDER BY clause.
  * It takes a child operator as input and sorts the tuples based on the specified columns.
- *
- * The SortOperator class contains the following methods:
- * - getNextTuple(): Retrieves the next tuple that satisfies the ORDER BY clause.
- * - reset(): Resets the iterator to the start.
- * - getTableName(): Returns the name of the table.
+ * <br><br>
+ * The SortOperator class contains the following methods:<br>
+ * - getNextTuple(): Retrieves the next tuple that satisfies the ORDER BY clause.<br>
+ * - reset(): Resets the iterator to the start.<br>
+ * - getTableName(): Returns the name of the table.<br>
  * - getTableSchema(): Returns the schema of the table.
- *
- * The SortOperator class also contains the following instance variables:
- * - childOperator: The child operator of the SortOperator.
- * - columnIndexes: A list of column indexes to be sorted.
- * - schema: The schema of the table.
- * - tuplesList: A list of tuples to be sorted.
+ * <br><br>
+ * The SortOperator class also contains the following instance variables:<br>
+ * - childOperator: The child operator of the SortOperator.<br>
+ * - columnIndexes: A list of column indexes to be sorted.<br>
+ * - schema: The schema of the table.<br>
+ * - tuplesList: A list of tuples to be sorted.<br>
  * - currentTupleIndex: The index of the current tuple in the sorted list.
  */
 public class SortOperator extends Operator{

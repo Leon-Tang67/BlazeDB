@@ -10,16 +10,16 @@ import java.util.*;
  * DatabaseCatalog class is a singleton class that stores the schema of the database.
  * It reads the schema from the schema.txt file and stores it in a map.
  * It also stores the file path of the table in a map.
- *
- * The DatabaseCatalog class contains the following methods:
- * - getInstance(): Returns the instance of the DatabaseCatalog class.
- * - loadSchema(): Loads the schema from the schema.txt file.
- * - getTableFilePath(): Returns the file path of the table.
+ * <br><br>
+ * The DatabaseCatalog class contains the following methods:<br>
+ * - getInstance(): Returns the instance of the DatabaseCatalog class.<br>
+ * - loadSchema(): Loads the schema from the schema.txt file.<br>
+ * - getTableFilePath(): Returns the file path of the table.<br>
  * - getTableSchema(): Returns the schema of the table.
- *
- * The DatabaseCatalog class also contains the following instance variables:
- * - instance: The instance of the DatabaseCatalog class.
- * - tableFileMap: A map that stores the file path of the table.
+ * <br><br>
+ * The DatabaseCatalog class also contains the following instance variables:<br>
+ * - instance: The instance of the DatabaseCatalog class.<br>
+ * - tableFileMap: A map that stores the file path of the table.<br>
  * - tableSchemaMap: A map that stores the schema of the table.
  */
 

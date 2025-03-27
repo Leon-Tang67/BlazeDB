@@ -11,9 +11,9 @@ import java.io.*;
 /**
  * The Interpreter class is responsible for executing the query in the provided file
  * and writing the result to the output file.
- *
- * The Interpreter class contains the following methods:
- * - executeQuery(): Executes the query in the provided file and writes the result to the output file.
+ * <br><br>
+ * The Interpreter class contains the following methods:<br>
+ * - executeQuery(): Executes the query in the provided file and writes the result to the output file.<br>
  * - execute(): Executes the provided query plan by repeatedly calling `getNextTuple()`
  */
 

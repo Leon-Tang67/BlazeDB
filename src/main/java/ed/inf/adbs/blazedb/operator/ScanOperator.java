@@ -10,17 +10,17 @@ import java.util.List;
 /**
  * The ScanOperator class is responsible for scanning the table and returning the tuples.
  * It reads the table file and returns the tuples one by one.
- *
- * The ScanOperator class extends the Operator class and implements the following methods:
- * - getNextTuple(): Retrieves the next tuple from the table.
- * - reset(): Resets the iterator to the start of the table.
- * - getTableName(): Returns the name of the table.
+ * <br><br>
+ * The ScanOperator class extends the Operator class and implements the following methods:<br>
+ * - getNextTuple(): Retrieves the next tuple from the table.<br>
+ * - reset(): Resets the iterator to the start of the table.<br>
+ * - getTableName(): Returns the name of the table.<br>
  * - getTableSchema(): Returns the schema of the table.
- *
- * The ScanOperator class also contains the following instance variables:
- * - reader: The BufferedReader object used to read the table file.
- * - tableName: The name of the table being scanned.
- * - tableFilePath: The file path of the table being scanned.
+ * <br><br>
+ * The ScanOperator class also contains the following instance variables:<br>
+ * - reader: The BufferedReader object used to read the table file.<br>
+ * - tableName: The name of the table being scanned.<br>
+ * - tableFilePath: The file path of the table being scanned.<br>
  * - tableSchema: The schema of the table being scanned.
  */
 

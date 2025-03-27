@@ -12,15 +12,15 @@ import java.util.Map;
 
 
 /**
- * Extracts selection and join conditions from a given expression.
+ * Extracts selection and join conditions from a given expression.<br>
  * Selection conditions are stored in a map where the key is the table name and the value is the selection condition.
  * Join conditions are stored in a list.
- *
- * The ConditionExtractor class contains the following methods:
- * - extract(): Extracts selection and join conditions from the given expression.
- * - categorizeCondition(): Categorizes the condition as a selection or join condition.
- * - mergeSelectionCondition(): Merges the existing selection condition with the new condition.
- * - isJoinCondition(): Checks if the condition is a join condition between the given tables.
+ * <br><br>
+ * The ConditionExtractor class contains the following methods:<br>
+ * - extract(): Extracts selection and join conditions from the given expression.<br>
+ * - categorizeCondition(): Categorizes the condition as a selection or join condition.<br>
+ * - mergeSelectionCondition(): Merges the existing selection condition with the new condition.<br>
+ * - isJoinCondition(): Checks if the condition is a join condition between the given tables.<br>
  * - getTableName(): Returns the table name of the given expression.
  */
 
@@ -32,10 +32,12 @@ public class ConditionExtractor {
      * @param select The select statement to extract conditions for.
      * @param selectionConditions The map to store selection conditions.
      * @param joinConditions The list to store join conditions.
+     *
+     * @Description:
+     * Recursively extract conditions if the expression is an AndExpression.
+     * Otherwise, categorize the condition as a selection or join condition.
      */
     public static void extract(Expression expression, PlainSelect select, Map<String, Expression> selectionConditions, List<Expression> joinConditions) {
-        // Recursively extract conditions if the expression is an AndExpression
-        // Otherwise, categorize the condition as a selection or join condition
         if (expression instanceof AndExpression) {
             AndExpression andExpr = (AndExpression) expression;
             extract(andExpr.getLeftExpression(), select, selectionConditions, joinConditions);
@@ -51,16 +53,17 @@ public class ConditionExtractor {
      * @param select The select statement to categorize the condition for.
      * @param selectionConditions The map to store selection conditions.
      * @param joinConditions The list to store join conditions.
+     *
+     * @Description:
+     * Categorize the condition as a selection or join condition and store it accordingly.<br>
+     * - If both sides of the expression are tables, add it as a join condition.<br>
+     * - If one side of the expression is a constant, add it as a select condition to the table on the other side.<br>
+     * - If both sides of the expression are constants, add it as a selection condition to the first table in the FROM clause.
      */
     private static void categorizeCondition(BinaryExpression condition, PlainSelect select, Map<String, Expression> selectionConditions, List<Expression> joinConditions) {
-        // Get the table names of the left and right expressions
         String leftTable = getTableName(condition.getLeftExpression());
         String rightTable = getTableName(condition.getRightExpression());
 
-        // Categorize the condition as a selection or join condition and store it accordingly
-        // If both sides of the expression are tables, add it as a join condition
-        // If one side of the expression is a constant, add it as a select condition to the table on the other side
-        // If both sides of the expression are constants, add it as a selection condition to the first table in the FROM clause
         if (leftTable != null && rightTable != null && !leftTable.equals(rightTable) && !leftTable.equals("CONSTANT") && !rightTable.equals("CONSTANT")) {
             joinConditions.add(condition);
         } else if (leftTable != null && !leftTable.equals("CONSTANT")) {
@@ -94,7 +97,7 @@ public class ConditionExtractor {
             BinaryExpression binaryExpr = (BinaryExpression) condition;
             String left = getTableName(binaryExpr.getLeftExpression());
             String right = getTableName(binaryExpr.getRightExpression());
-            return (left != null && right != null) && ((left.equals(leftTable) && right.equals(rightTable)) || (left.equals(rightTable) && right.equals(leftTable)));
+            return ((left.equals(leftTable) && right.equals(rightTable)) || (left.equals(rightTable) && right.equals(leftTable)));
         }
         return false;
     }

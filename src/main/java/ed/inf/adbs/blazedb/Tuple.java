@@ -6,15 +6,15 @@ import java.util.*;
  * The Tuple class represents a row of data.
  * Each Tuple object contains a list of integer values.
  * It provides methods to access the values and to compare Tuples.
+ * <br><br>
+ * The Tuple class contains the following methods:<br>
+ * - getValue(int index) returns the value at the specified index.<br>
+ * - getValues() returns an unmodifiable list of values.<br>
+ * - toString() returns a string representation of the Tuple.<br>
+ * - equals(Object o) checks if the Tuple is equal to another object.<br>
+ * - hashCode() returns the hash code of the Tuple.<br>
  *
- * A brief description of the methods is provided below:
- * getValue(int index) returns the value at the specified index.
- * getValues() returns an unmodifiable list of values.
- * toString() returns a string representation of the Tuple.
- * equals(Object o) checks if the Tuple is equal to another object.
- * hashCode() returns the hash code of the Tuple.
- *
- * With the last 3 methods overridden, the Tuple class can be used in collections like HashMap and HashSet.
+ * With the last 3 methods overridden, the Tuple instances can be used in collections like HashMap and HashSet.
  */
 
 public class Tuple {

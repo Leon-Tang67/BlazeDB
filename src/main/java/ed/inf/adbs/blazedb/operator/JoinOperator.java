@@ -8,22 +8,21 @@ import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
 
-
 /**
  * The JoinOperator class is responsible for performing the join operation between two tables.
  * It takes two child operators as input and a join condition to perform the join operation.
- *
- * The JoinOperator class contains the following methods:
- * - getNextTuple(): Retrieves the next tuple that satisfies the join condition.
- * - reset(): Resets the iterator to the start.
- * - getTableName(): Returns the name of the table.
+ * <br><br>
+ * The JoinOperator class contains the following methods:<br>
+ * - getNextTuple(): Retrieves the next tuple that satisfies the join condition.<br>
+ * - reset(): Resets the iterator to the start.<br>
+ * - getTableName(): Returns the name of the table.<br>
  * - getTableSchema(): Returns the schema of the table.
- *
- * The JoinOperator class also contains the following instance variables:
- * - leftChild: The left child operator of the JoinOperator.
- * - rightChild: The right child operator of the JoinOperator.
- * - joinCondition: The join condition to be applied on the tuples.
- * - schema: The schema of the joined table.
+ * <br><br>
+ * The JoinOperator class also contains the following instance variables:<br>
+ * - leftChild: The left child operator of the JoinOperator.<br>
+ * - rightChild: The right child operator of the JoinOperator.<br>
+ * - joinCondition: The join condition to be applied on the tuples.<br>
+ * - schema: The schema of the joined table.<br>
  * - leftTuple: The current tuple from the left child operator.
  */
 

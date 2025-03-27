@@ -11,17 +11,17 @@ import java.util.List;
 /**
  * The ExpressionEvaluator class is responsible for evaluating the expressions in the WHERE clause.
  * It evaluates the expressions based on the tuple values and the schema of the table.
- *
- * The ExpressionEvaluator class contains the following methods:
- * - getResult(): Returns the result of the evaluation.
- * - getValue(): Returns the value of the evaluated expression.
- * - evaluateComparison(): Evaluates the comparison expressions.
+ * <br><br>
+ * The ExpressionEvaluator class contains the following methods:<br>
+ * - getResult(): Returns the result of the evaluation.<br>
+ * - getValue(): Returns the value of the evaluated expression.<br>
+ * - evaluateComparison(): Evaluates the comparison expressions.<br>
  * - The other methods are overridden from the ExpressionVisitorAdapter class to visit different types of expressions.
- *
- * The ExpressionEvaluator class also contains the following instance variables:
- * - tuple: The tuple containing the values of the table.
- * - schema: The schema of the table.
- * - result: The result of the evaluation.
+ * <br><br>
+ * The ExpressionEvaluator class also contains the following instance variables:<br>
+ * - tuple: The tuple containing the values of the table.<br>
+ * - schema: The schema of the table.<br>
+ * - result: The result of the evaluation.<br>
  * - value: The value of the evaluated expression.
  */
 public class ExpressionEvaluator extends ExpressionVisitorAdapter {
@@ -44,7 +44,11 @@ public class ExpressionEvaluator extends ExpressionVisitorAdapter {
         return value;
     }
 
-    // Recursively evaluate the left and right expressions of the AND expression
+    /**
+     * Recursively evaluate the left and right expressions of the AND expression.
+     *
+     * @param andExpr The AND expression.
+     */
     @Override
     public void visit(AndExpression andExpr) {
         ExpressionEvaluator leftEval = new ExpressionEvaluator(tuple, schema);
@@ -86,7 +90,12 @@ public class ExpressionEvaluator extends ExpressionVisitorAdapter {
         evaluateComparison(minorThanEquals, "<=");
     }
 
-    // Evaluate the comparison expressions based on the operator
+    /**
+     * Evaluates the comparison expressions.
+     *
+     * @param expr The comparison expression.
+     * @param operator The operator of the comparison expression.
+     */
     private void evaluateComparison(BinaryExpression expr, String operator) {
         ExpressionEvaluator leftEval = new ExpressionEvaluator(tuple, schema);
         expr.getLeftExpression().accept(leftEval);

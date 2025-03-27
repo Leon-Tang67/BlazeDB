@@ -13,20 +13,20 @@ import java.util.*;
  * The QueryPlanner class is responsible for generating the query plan for the provided SQL query.
  * It extracts the selection and join conditions from the WHERE clause and builds the operator tree accordingly.
  * The operator tree is then used to execute the query and write the result to the output file.
- *
- * The QueryPlanner class contains the following methods:
- * - generatePlan(): Generates the query plan for the provided SQL query.
- * - extractConditions(Expression where): Extracts the selection and join conditions from the WHERE clause.
+ * <br><br>
+ * The QueryPlanner class contains the following methods:<br>
+ * - generatePlan(): Generates the query plan for the provided SQL query.<br>
+ * - extractConditions(Expression where): Extracts the selection and join conditions from the WHERE clause.<br>
  * - buildTableScans(): Builds the table scan operators for the FROM clause tables.
- *                      If selection conditions are present, a SelectOperator is added on top of the ScanOperator.
- * - buildOperatorTree(): Builds the operator tree based on the extracted conditions and table scans.
- * - findJoinCondition(String leftTable, String rightTable): Finds the join condition between two tables.
+ *                      If selection conditions are present, a SelectOperator is added on top of the ScanOperator.<br>
+ * - buildOperatorTree(): Builds the operator tree based on the extracted conditions and table scans.<br>
+ * - findJoinCondition(String leftTable, String rightTable): Finds the join condition between two tables.<br>
  * - getFromTables(): Returns a list of table names from the FROM clause.
- *
- * The QueryPlanner class also contains the following instance variables:
- * - select: The PlainSelect object representing the SQL query.
- * - tableScansMapping: A mapping of table names to table ScanOperators or SelectOperator.
- * - joinConditions: A list of join conditions extracted from the WHERE clause.
+ * <br><br>
+ * The QueryPlanner class also contains the following instance variables:<br>
+ * - select: The PlainSelect object representing the SQL query.<br>
+ * - tableScansMapping: A mapping of table names to table ScanOperators or SelectOperator.<br>
+ * - joinConditions: A list of join conditions extracted from the WHERE clause.<br>
  * - selectionConditions: A mapping of table names to selection conditions.
  */
 
@@ -63,7 +63,6 @@ import java.util.*;
      */
     private void extractConditions(Expression where) {
         if (where == null) return; // No conditions to extract
-        // Call ConditionExtractor to extract selection and join conditions
         ConditionExtractor.extract(where, this.select, selectionConditions, joinConditions);
     }
 
@@ -100,8 +99,8 @@ import java.util.*;
             root = new JoinOperator(root, right, joinCondition); //joinCondition can be null indicating cross product
         }
 
-        // Add ProjectOperator on top if the first select item is not AllColumns (there is/are projection condition(s))
-        // or if the first item is AllColumn but there is/are SUM clause(s) in the select list
+        // Add ProjectOperator on top if the first select item is not AllColumns (there are projection conditions)
+        // or if the first item is AllColumn but there are SUM clauses in the select list
         if (!(select.getSelectItems().get(0).getExpression() instanceof AllColumns) ||
                 select.getSelectItems().stream().anyMatch(item -> item.toString().contains("SUM"))) {
             root = new ProjectOperator(root, select);
@@ -135,9 +134,16 @@ import java.util.*;
      * @param leftTable  The name of the left table.
      * @param rightTable The name of the right table.
      * @return The join condition between the two tables.
+     *
+     * @Description:
+     * Iterate through the join conditions to find the one that matches the two tables.<br>
+     * If no join condition is found, check if the table is a joined table with JOIN keyword.<br>
+     * Extract the join condition based on the table names from the joined table.<br>
+     * This is particularly useful if there are multiple joins between the multiple tables.<br>
+     * The previously joined tables will be on the left of the join tree and the joined table's name will have JOIN keyword.<br>
+     * Combine multiple join conditions into a single AndExpression for future use
      */
     private Expression findJoinCondition(String leftTable, String rightTable) {
-        // Iterate through the join conditions to find the one that matches the two tables
         List<Expression> conditions = new ArrayList<>();
         for (Expression cond : joinConditions) {
             if (ConditionExtractor.isJoinCondition(cond, leftTable, rightTable)) {
@@ -145,10 +151,6 @@ import java.util.*;
             }
         }
 
-        // If no join condition is found, check if the table is a joined table with JOIN keyword
-        // and extract the join condition based on the table names from the joined table
-        // This is particularly useful if there are multiple joins between the multiple tables
-        // The firstly joined tables will be on the left of the join tree and the joined table's name will have JOIN keyword
         if (conditions.isEmpty() && leftTable.contains("JOIN")) {
             String[] joinedTables = leftTable.split(" JOIN ");
             for (String table : joinedTables) {
@@ -159,12 +161,10 @@ import java.util.*;
             }
         }
 
-        // Return if there is no join condition found
         if (conditions.isEmpty()) {
             return null;
         }
 
-        // Combine multiple join conditions into a single AndExpression for future use
         Expression combinedConditions = conditions.get(0);
         for (int i = 1; i < conditions.size(); i++) {
             combinedConditions = new AndExpression(combinedConditions, conditions.get(i));

@@ -7,11 +7,11 @@ import java.util.List;
 /**
  * The abstract Operator class for the iterator model.
  * The Operator class is the base class for all operators in the query execution plan.
- *
- * The Operator class contains the following methods:
- * - getNextTuple(): Retrieves the next tuple from the iterator.
- * - reset(): Resets the iterator to the start.
- * - getTableName(): Returns the name of the table.
+ * <br><br>
+ * The Operator class contains the following methods:<br>
+ * - getNextTuple(): Retrieves the next tuple from the iterator.<br>
+ * - reset(): Resets the iterator to the start.<br>
+ * - getTableName(): Returns the name of the table.<br>
  * - getTableSchema(): Returns the schema of the table.
  */
 public abstract class Operator {

@@ -13,20 +13,20 @@ import java.util.*;
 /**
  * The SumOperator class is responsible for performing the sum operation on the selected columns.
  * It takes a child operator as input and the selected columns to perform the sum operation.
- *
- * The SumOperator class contains the following methods:
- * - getNextTuple(): Retrieves the next tuple with the sum of the selected columns.
- * - reset(): Resets the iterator to the start.
- * - getTableName(): Returns the name of the table.
+ * <br><br>
+ * The SumOperator class contains the following methods:<br>
+ * - getNextTuple(): Retrieves the next tuple with the sum of the selected columns.<br>
+ * - reset(): Resets the iterator to the start.<br>
+ * - getTableName(): Returns the name of the table.<br>
  * - getTableSchema(): Returns the schema of the table.
- *
- * The SumOperator class also contains the following instance variables:
- * - childOperator: The child operator of the SumOperator.
- * - schema: The schema of the table from the child operator.
- * - selectedColumns: The selected columns to perform the sum operation.
- * - groupByColumns: The group by columns for the sum operation.
- * - sumExpIndexesList: A list of indexes of the selected columns that contain the sum operation.
- * - groupColToTupleAndSumMapping: A mapping of group by columns to the tuple values and sum values.
+ * <br><br>
+ * The SumOperator class also contains the following instance variables:<br>
+ * - childOperator: The child operator of the SumOperator.<br>
+ * - schema: The schema of the table from the child operator.<br>
+ * - selectedColumns: The selected columns to perform the sum operation.<br>
+ * - groupByColumns: The group by columns for the sum operation.<br>
+ * - sumExpIndexesList: A list of indexes of the selected columns that contain the sum operation.<br>
+ * - groupColToTupleAndSumMapping: A mapping of group by columns to the tuple values and sum values.<br>
  * - groupIterator: An iterator to iterate over the group by columns.
  */
 
@@ -59,26 +59,31 @@ public class SumOperator extends Operator {
         }
     }
 
+    /**
+     * Retrieves the next tuple with the sum of the selected columns.
+     * @return The next tuple with the sum of the selected columns.
+     *
+     * @Description
+     * If the groupIterator is null, compute the group sums. This is a blocking operation.<br>
+     * For loop: Pick the values of the columns from the SELECT clause and the SUM clause and combine them
+     * into a single tuple.<br>
+     * If the selected column is an AllColumns, pick all the group by columns because the * indicates a subset
+     * of the group by columns.<br>
+     * If the selected column is a Column, pick the column value based on the column name.<br>
+     * If the selected column contains the SUM operation, pick the sum values, which are stored after
+     * the tuple values.
+     */
     @Override
     public Tuple getNextTuple() {
-        // If the groupIterator is null, which means the group by or sum operation has not been performed yet
-        // Compute the group sums. This is a blocking operation.
         if (groupIterator == null) {
             computeGroupSums();
             groupIterator = groupColToTupleAndSumMapping.entrySet().iterator();
         }
 
-        // Iterate through the groupColToTupleAndSumMapping and return the next tuple
         if (groupIterator.hasNext()) {
             Map.Entry<String, List<Integer>> entry = groupIterator.next();
             List<Integer> pickAndCombinedTuple = new ArrayList<>();
 
-            // Pick the columns from the group by columns and the sum columns and combine them into a single tuple
-            // If the selected column is an AllColumns, pick all the group by columns because it indicates a subset
-            //      of the group by columns
-            // If the selected column is a Column, pick the column value based on the selected column name
-            // If the selected column contains the SUM operation, pick the sum value(s), which is/are stored after
-            //      the tuple values
             for (int selectedColumnIndex = 0; selectedColumnIndex < selectedColumns.size(); selectedColumnIndex++) {
                 Expression selectedColumn = selectedColumns.get(selectedColumnIndex).getExpression();
                 if (selectedColumn instanceof AllColumns) {
@@ -168,7 +173,7 @@ public class SumOperator extends Operator {
     /**
      * Returns the schema of the table.
      * The first part of the schema is the same as the schema of the child operator.
-     * If the selected column contains the SUM operation, as the summed value(s) is/are appended to the tuple values,
+     * If the selected column contains the SUM operation, as the summed values are appended to the tuple values,
      * the schema is extended to match the summed values.
      * @return A list of strings representing the schema of the table.
      */
