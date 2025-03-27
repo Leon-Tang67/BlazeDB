@@ -158,7 +158,6 @@ public class ProjectOperator extends Operator {
         if (function.getParameters().get(0) instanceof Multiplication) {
             Multiplication multiplication = (Multiplication) function.getParameters().get(0);
             while (true) {
-                // TODO: check if long value is in the middle of the multiplication and at the back case
                 if (multiplication.getRightExpression() instanceof Column) {
                     Column column = (Column) multiplication.getRightExpression();
                     String columnFullName = column.getFullyQualifiedName();

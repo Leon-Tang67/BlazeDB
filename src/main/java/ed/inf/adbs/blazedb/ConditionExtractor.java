@@ -97,7 +97,7 @@ public class ConditionExtractor {
             BinaryExpression binaryExpr = (BinaryExpression) condition;
             String left = getTableName(binaryExpr.getLeftExpression());
             String right = getTableName(binaryExpr.getRightExpression());
-            return ((left.equals(leftTable) && right.equals(rightTable)) || (left.equals(rightTable) && right.equals(leftTable)));
+            return ((left != null && right != null) && ((left.equals(leftTable) && right.equals(rightTable)) || (left.equals(rightTable) && right.equals(leftTable))));
         }
         return false;
     }
